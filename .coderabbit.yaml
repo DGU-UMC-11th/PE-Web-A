@@ -164,6 +164,7 @@ knowledge_base:
   # 과거 이슈 내역을 지식 베이스로 활용
   issues:
     enabled: true
+    
 
   # 과거 병합된 PR 내역을 지식 베이스로 활용
   pull_requests:
