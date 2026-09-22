@@ -14,6 +14,11 @@ const members: StudyMember[] = [
   { id: 2, name: "일반 챌린저", role: "member" },
 ];
 
+/**
+ * 회원 역할에 맞는 안내 문구를 반환한다.
+ * @param role 회원의 역할
+ * @returns 역할별 안내 문구
+ */
 function getRoleMessage(role: MemberRole) {
   if (role === "leader") {
     return "스터디를 이끌어요.";
@@ -22,6 +27,11 @@ function getRoleMessage(role: MemberRole) {
   return "스터디에 참여해요.";
 }
 
+/**
+ * 회원 ID로 조회하여 역할과 GitHub 정보를 담은 안내 문구를 반환한다.
+ * @param memberId 조회할 회원 ID
+ * @returns 회원 안내 문구 또는 회원을 찾지 못했다는 메시지
+ */
 function createMemberMessage(memberId: number) {
   const member = members.find((member) => member.id === memberId);
 
