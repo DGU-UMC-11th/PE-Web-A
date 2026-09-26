@@ -1,0 +1,21 @@
+.app {
+  min-height: 100vh;
+  background: #F6F7F9;
+  text-align: left;
+}
+
+.app__content {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 80px 80px;
+  box-sizing: border-box;
+}
+
+.app__title {
+  margin: 0 0 32px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #000000;
+  text-align: left;
+}

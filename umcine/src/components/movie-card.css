@@ -1,0 +1,54 @@
+.movie-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.movie-card__poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.movie-card__bookmark-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.movie-card__bookmark-button--active {
+  background: #2563EB;
+}
+
+.movie-card__bookmark-icon {
+  width: 24px;
+  height: 24px;
+  /* SVG 원본이 검정이라 흰색으로 반전 */
+  filter: brightness(0) invert(1);
+}
+
+.movie-card__title {
+  margin: 12px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.movie-card__release-date {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #888888;
+}
