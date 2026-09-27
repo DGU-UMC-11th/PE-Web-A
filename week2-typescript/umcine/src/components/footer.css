@@ -1,0 +1,29 @@
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.footer__inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 16px var(--content-padding);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.footer__logo {
+  height: 14px;
+  width: auto;
+}
+
+.footer__text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.footer__text a {
+  color: var(--accent);
+  text-decoration: underline;
+}

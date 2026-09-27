@@ -1,0 +1,53 @@
+:root {
+  --text-h: #111114;
+  --text-muted: #767680;
+  --bg: #ffffff;
+  --border: #e5e5ea;
+  --surface-muted: #f2f2f5;
+  --surface-muted-hover: #e8e8ec;
+  --accent: #3461ff;
+  --accent-hover: #2c52e0;
+
+  --content-width: 1160px;
+  --content-padding: 24px;
+
+  --sans:
+    "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", system-ui, sans-serif;
+
+  font: 15px/1.5 var(--sans);
+  color-scheme: light;
+  color: var(--text-h);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
