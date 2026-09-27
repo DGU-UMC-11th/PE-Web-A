@@ -1,0 +1,83 @@
+.movie-card {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.poster-wrapper {
+  position: relative;
+
+  width: 100%;
+  height: 274px;
+
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.movie-poster {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+.movie-title {
+  margin: 0;
+
+  color: #17191e;
+
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+}
+.movie-date {
+  margin: 0;
+
+  color: #969da8;
+
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+
+.bookmark-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  background-color: #17191e;
+
+  border: 2px solid #ffffff;
+  border-radius: 10px;
+
+  cursor: pointer;
+}
+
+
+.bookmark-button.active {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.bookmark-button img {
+  width: 24px;
+  height: 24px;
+  display: block;
+
+  filter: brightness(0) invert(1);
+}

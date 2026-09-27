@@ -1,0 +1,187 @@
+.header {
+  width: 100%;
+
+  background-color: #ffffff;
+  border-bottom: 1px solid #e3e6eb;
+}
+
+.header-inner {
+  width: 100%;
+  max-width: 1440px;
+  height: 96px;
+
+  margin: 0 auto;
+  padding: 24px 80px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+
+.logo-button {
+  width: 32px;
+  height: 32px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px;
+
+  background-color: #ffffff;
+  border: 2px solid #17191e;
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+.header-logo {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-left h1 {
+  width: 74px;
+  height: 24px;
+
+  margin: 0 0 0 10px;
+
+  color: #17191e;
+
+  font-family: Pretendard, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 100%;
+  letter-spacing: -0.7px;
+
+  display: flex;
+  align-items: center;
+}
+
+
+.header-nav {
+  display: flex;
+  align-items: center;
+
+  gap: 32px;
+  margin-left: 48px;
+}
+
+
+.nav-item {
+  position: relative;
+
+  padding: 8px 0;
+
+  border: none;
+  background: none;
+
+  color: #606774;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.nav-item:hover {
+  color: #17191e;
+}
+
+
+.nav-item.active {
+  color: #17191e;
+  font-weight: 700;
+}
+
+
+.nav-item.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 8px;
+
+  height: 1px;
+
+  background-color: #17191e;
+}
+
+
+.header-right {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.search-button {
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #ffffff;
+
+  border: 1.5px solid #e3e6eb;
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+}
+
+
+.mypage-button {
+  height: 42px;
+
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #2563eb;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+.mypage-button:hover {
+  background-color: #1d4ed8;
+}
+
+.mypage-button:active {
+  background-color: #1748ad;
+}
