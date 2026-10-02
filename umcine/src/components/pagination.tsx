@@ -1,5 +1,9 @@
 import "./pagination.css";
 
+/**
+ * 이전/다음 버튼과 페이지 번호로 구성된 페이지네이션
+ * 현재는 1페이지만 있어 이동 버튼은 비활성화되어 있다.
+ */
 function Pagination() {
   return (
     <nav className="pagination" aria-label="페이지 이동">

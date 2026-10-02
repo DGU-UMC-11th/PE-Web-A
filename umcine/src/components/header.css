@@ -76,3 +76,17 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+@media (max-width: 640px) {
+  .header__inner {
+    flex-wrap: wrap;
+    gap: 12px;
+    height: auto;
+    min-height: 91px;
+    padding: 16px;
+  }
+
+  .header__left-group {
+    gap: 24px;
+  }
+}

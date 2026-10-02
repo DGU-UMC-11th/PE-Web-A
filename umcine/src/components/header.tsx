@@ -1,5 +1,8 @@
 import "./header.css";
 
+/**
+ * 로고, 내비게이션 메뉴, 검색 아이콘, 마이페이지 버튼을 보여주는 상단 헤더
+ */
 function Header() {
   return (
     <header className="header">

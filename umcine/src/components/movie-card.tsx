@@ -6,6 +6,11 @@ interface MovieCardProps {
   onToggleBookmark: (movieId: number) => void;
 }
 
+/**
+ * 영화 포스터, 제목, 개봉일과 북마크 버튼을 보여주는 카드
+ * @param movie 표시할 영화 정보
+ * @param onToggleBookmark 북마크 버튼 클릭 시 호출되는 콜백
+ */
 function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
   return (
     <article className="movie-card">
@@ -15,7 +20,7 @@ function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
         type="button"
         className={`movie-card__bookmark-button${movie.isBookmarked ? " movie-card__bookmark-button--active" : ""}`}
         onClick={() => onToggleBookmark(movie.id)}
-        aria-label={movie.isBookmarked ? "북마크 해제" : "북마크 추가"}
+        aria-label={`${movie.title} ${movie.isBookmarked ? "북마크 해제" : "북마크 추가"}`}
         aria-pressed={movie.isBookmarked}
       >
         <img

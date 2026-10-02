@@ -19,3 +19,9 @@
   color: #000000;
   text-align: left;
 }
+
+@media (max-width: 640px) {
+  .app__content {
+    padding: 24px 16px 48px;
+  }
+}
