@@ -1,0 +1,42 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+}
+
+.pagination__arrow-button,
+.pagination__page-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.pagination__arrow-button:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.pagination__arrow-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.pagination__page-button {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.pagination__page-button--active {
+  background: #000000;
+  color: #FFFFFF;
+}
