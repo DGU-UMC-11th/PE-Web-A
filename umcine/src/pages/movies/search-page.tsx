@@ -25,7 +25,7 @@ export function SearchPage() {
           movie.originalTitle.toLowerCase().includes(normalizedQuery),
       )
     : [];
-  // 2열 그리드의 마지막 행이 시작하는 index (마지막 행은 아래 구분선을 그리지 않는다)
+  // lg 이상 2열 그리드의 마지막 행이 시작하는 index (마지막 행은 아래 구분선을 그리지 않는다)
   const lastRowStartIndex = searchResults.length - (searchResults.length % 2 || 2);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -43,7 +43,7 @@ export function SearchPage() {
   if (!hasQuery) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-9 px-4 py-6">
-        <h1 className="text-center text-[46px]/[52px] font-bold tracking-[-2.3px] text-ink">
+        <h1 className="text-center text-[30px]/[38px] font-bold tracking-[-1.5px] break-keep text-ink sm:text-[46px]/[52px] sm:tracking-[-2.3px]">
           어떤 영화를 찾고 있나요?
         </h1>
         <div className="flex w-[790px] max-w-full flex-col gap-2">
@@ -61,7 +61,7 @@ export function SearchPage() {
             />
             <button
               type="submit"
-              className="h-[42px] w-[59px] shrink-0 cursor-pointer rounded-lg border border-ink bg-ink text-sm/[17px] font-extrabold text-white"
+              className="h-[42px] w-[59px] shrink-0 cursor-pointer rounded-lg border border-ink bg-ink text-sm/[17px] font-extrabold whitespace-nowrap text-white"
             >
               검색
             </button>
@@ -78,7 +78,7 @@ export function SearchPage() {
         <h1 className="text-[38px]/[44px] font-bold tracking-[-1.71px] text-ink">영화 검색</h1>
         <form
           onSubmit={handleSubmit}
-          className="flex h-[54px] w-full items-center gap-[18px] rounded-[9px] border border-line bg-white pr-2.5 pl-[15px]"
+          className="flex h-[54px] w-full items-center gap-2.5 rounded-[9px] border border-line bg-white pr-2.5 pl-[15px] sm:gap-[18px]"
         >
           <Icon name="search" className="size-6 text-muted" />
           <input
@@ -91,41 +91,45 @@ export function SearchPage() {
             type="button"
             aria-label="검색어 지우기"
             onClick={handleClear}
-            className="flex shrink-0 cursor-pointer items-center justify-center"
+            className="flex size-6 shrink-0 cursor-pointer items-center justify-center"
           >
             <Icon name="close" className="size-6 text-muted" />
           </button>
           <button
             type="submit"
-            className="h-[42px] w-[86px] shrink-0 cursor-pointer rounded-lg border border-white bg-ink text-sm/[17px] font-extrabold text-white"
+            className="h-[42px] w-[86px] shrink-0 cursor-pointer rounded-lg border border-white bg-ink text-sm/[17px] font-extrabold whitespace-nowrap text-white"
           >
             다시 검색
           </button>
         </form>
       </div>
 
-      <div className="mt-6 flex h-[54px] items-center justify-between border-y border-line">
-        <h2 className="text-lg/[21px] font-bold text-ink">‘{query}’ 검색 결과</h2>
-        <p className="text-xs/[14px] text-subtle">영화 {searchResults.length}편 · 1페이지</p>
+      <div className="mt-6 flex h-[54px] items-center justify-between gap-3 border-y border-line">
+        <h2 className="min-w-0 truncate text-lg/[21px] font-bold text-ink">‘{query}’ 검색 결과</h2>
+        <p className="shrink-0 text-xs/[14px] whitespace-nowrap text-subtle">영화 {searchResults.length}편 · 1페이지</p>
       </div>
 
       {searchResults.length === 0 ? (
         <p className="py-10 text-center text-sm text-subtle">검색 결과가 없어요.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-x-10">
+        <ul className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
           {searchResults.map((movie, index) => (
             <li
               key={movie.id}
-              className={cn("flex gap-[18px] py-5", index < lastRowStartIndex && "border-b border-line")}
+              className={cn(
+                "flex gap-3 py-5 sm:gap-[18px]",
+                index < searchResults.length - 1 && "border-b border-line",
+                index >= lastRowStartIndex && "lg:border-b-0",
+              )}
             >
               <img
                 src={movie.posterPath}
                 alt={`${movie.title} 포스터`}
-                className="h-[190px] w-[126px] shrink-0 rounded-[10px] bg-page object-cover"
+                className="h-[145px] w-24 shrink-0 rounded-[10px] bg-page object-cover sm:h-[190px] sm:w-[126px]"
               />
               <div className="flex min-w-0 flex-col gap-2">
-                <h3 className="text-lg/6 font-bold text-ink">{movie.title}</h3>
-                <p className="flex gap-2 text-xs/[14px] text-subtle">
+                <h3 className="text-lg/6 font-bold break-keep text-ink">{movie.title}</h3>
+                <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs/[14px] text-subtle">
                   <span>{movie.originalTitle}</span>
                   <span>{movie.releaseDate}</span>
                 </p>

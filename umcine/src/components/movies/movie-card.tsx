@@ -26,7 +26,7 @@ function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
           alt={`${movie.title} 포스터`}
           className="block aspect-[242/274] w-full rounded-[10px] object-cover"
         />
-        <h3 className="mt-3 text-[15px] font-bold text-ink">{movie.title}</h3>
+        <h3 className="mt-3 text-[15px] font-bold break-keep text-ink">{movie.title}</h3>
         <p className="mt-1 text-xs text-subtle">{movie.releaseDate}</p>
       </Link>
 

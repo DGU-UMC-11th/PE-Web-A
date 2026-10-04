@@ -19,7 +19,7 @@ export function MovieDetailPage() {
   return (
     <main>
       <section
-        className="relative h-[360px] w-full bg-cover bg-center"
+        className="relative h-[300px] w-full bg-cover bg-center sm:h-[360px]"
         style={{ backgroundImage: `url(${movie.backdropPath})` }}
       >
         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
@@ -33,7 +33,7 @@ export function MovieDetailPage() {
           </Link>
 
           <div className="flex w-[800px] max-w-full flex-col gap-2">
-            <h1 className="text-[46px]/[50px] font-bold tracking-[-2.3px] text-white">{movie.title}</h1>
+            <h1 className="text-[30px]/[36px] font-bold tracking-[-1.2px] break-keep text-white sm:text-[46px]/[50px] sm:tracking-[-2.3px]">{movie.title}</h1>
             <p className="text-sm/[17px] text-white">{movie.originalTitle}</p>
             <p className="flex flex-wrap gap-2 text-[13px]/4 font-bold text-white">
               <span>{movie.releaseDate}</span>
@@ -52,7 +52,7 @@ export function MovieDetailPage() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <h2 className="text-[21px]/[25px] font-bold tracking-[-0.63px] text-ink">{movie.tagline}</h2>
+          <h2 className="text-[21px]/[25px] font-bold tracking-[-0.63px] break-keep text-ink">{movie.tagline}</h2>
           <p className="text-sm/6 text-muted">{movie.overview}</p>
           <button
             type="button"
