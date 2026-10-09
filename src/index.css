@@ -1,4 +1,5 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import "tailwindcss";
 
 * {
   box-sizing: border-box;
@@ -18,11 +19,24 @@ body {
   color: #17191e;
 }
 
+a,
 button,
 input,
 textarea,
 select {
-  font: inherit;
+  font-family: "Pretendard", sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-size: inherit;
+}
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 h1,
