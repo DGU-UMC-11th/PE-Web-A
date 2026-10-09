@@ -31,12 +31,7 @@ export function MovieDetailPage() {
     );
   }
 
-  const backdropPath =
-    (
-      movie as typeof movie & {
-        backdropPath?: string;
-      }
-    ).backdropPath ?? movie.posterPath;
+  const backdropPath = movie.backdropPath ?? movie.posterPath;
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f5f6f8]">
@@ -68,8 +63,8 @@ export function MovieDetailPage() {
 
             <div className="mt-[8px] flex items-center gap-[10px] text-[14px] font-semibold text-white">
               <span>{movie.releaseDate}</span>
-              <span>SF · 액션 · 모험</span>
-              <span>2시간 25분</span>
+              <span>{movie.genres.join(" · ")}</span>
+              <span>{movie.runtime}</span>
             </div>
           </div>
         </div>
@@ -84,16 +79,11 @@ export function MovieDetailPage() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <h2 className="text-[20px] font-extrabold leading-[28px] text-[#17191e]">
-            스파이더맨의 새로운 날을 확인하라!
+            {movie.tagline}
           </h2>
 
           <p className="mt-[14px] text-[14px] leading-[22px] text-[#606774]">
             {movie.overview}
-          </p>
-
-          <p className="mt-[12px] text-[14px] leading-[22px] text-[#606774]">
-            한 삶을 살아가던 피터는 예상치 못한 DNA 변이와 자신의 정체를 아는
-            적을 마주한다.
           </p>
 
           <button
