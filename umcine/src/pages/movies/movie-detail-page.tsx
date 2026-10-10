@@ -1,12 +1,19 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { Icon } from "../../components/common/icon";
 import { movies } from "../../data/movies";
+import { useBookmarkStore } from "../../stores/bookmark-store";
+import { cn } from "../../utils/cn";
 
 const ratingScores = [1, 2, 3, 4, 5];
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
   const movie = movies.find((item) => item.id === Number(movieId));
+
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(Number(movieId)),
+  );
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
   if (!movie) {
     return (
@@ -56,10 +63,18 @@ export function MovieDetailPage() {
           <p className="text-sm/6 text-muted">{movie.overview}</p>
           <button
             type="button"
-            className="inline-flex h-[42px] w-[107px] cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-white bg-brand text-sm/[17px] font-extrabold text-white"
+            onClick={() => toggleBookmark(movie.id)}
+            aria-pressed={isBookmarked}
+            className={cn(
+              "inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-white px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white",
+              isBookmarked ? "bg-ink" : "bg-brand",
+            )}
           >
-            <Icon name="bookmark" className="size-4 text-white" />
-            즐겨찾기
+            <Icon
+              name={isBookmarked ? "bookmark" : "bookmark-outline"}
+              className="size-4 text-white"
+            />
+            {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}
           </button>
         </div>
 
