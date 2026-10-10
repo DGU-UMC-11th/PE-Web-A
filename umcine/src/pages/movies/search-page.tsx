@@ -1,6 +1,7 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { movies } from "../../data/movies";
+import MovieGrid from "../../components/movies/movie-grid";
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
@@ -56,28 +57,7 @@ export function SearchPage() {
           {searchResults.length === 0 ? (
             <p>검색 결과가 없어요.</p>
           ) : (
-            <ul>
-              {searchResults.map((movie) => (
-                <li key={movie.id}>
-                  <img
-                    src={movie.posterPath}
-                    alt={`${movie.title} 포스터`}
-                  />
-
-                  <h3>{movie.title}</h3>
-                  <p>{movie.originalTitle}</p>
-                  <p>{movie.releaseDate}</p>
-                  <p>{movie.overview}</p>
-
-                  <Link
-                    to="/movies/$movieId"
-                    params={{ movieId: String(movie.id) }}
-                  >
-                    상세 보기
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <MovieGrid movies={searchResults} />
           )}
         </>
       )}

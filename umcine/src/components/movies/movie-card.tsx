@@ -2,16 +2,21 @@ import { Link } from "@tanstack/react-router";
 import type { Movie } from "../../types/movie";
 import { Bookmark } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useBookmarkStore } from "../../stores/bookmark-store";
 
 interface MovieCardProps {
   movie: Movie;
-  onToggleBookmark: (movieId: number) => void;
 }
 
-export default function MovieCard({
-  movie,
-  onToggleBookmark,
-}: MovieCardProps) {
+export default function MovieCard({ movie }: MovieCardProps) {
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(movie.id)
+  );
+
+  const toggleBookmark = useBookmarkStore(
+    (state) => state.toggleBookmark
+  );
+
   return (
     <article className="overflow-hidden rounded-[10px] bg-white">
       <div className="poster-wrapper">
@@ -30,18 +35,18 @@ export default function MovieCard({
           type="button"
           className={cn(
             "absolute right-2 top-2 rounded-full p-2 text-white",
-            movie.isBookmarked ? "bg-blue-600" : "bg-black/60"
+            isBookmarked ? "bg-blue-600" : "bg-black/60"
           )}
           aria-label={`${movie.title} 북마크 ${
-            movie.isBookmarked ? "해제" : "추가"
+            isBookmarked ? "해제" : "추가"
           }`}
-          aria-pressed={movie.isBookmarked}
-          onClick={() => onToggleBookmark(movie.id)}
+          aria-pressed={isBookmarked}
+          onClick={() => toggleBookmark(movie.id)}
         >
           <Bookmark
             size={24}
             color="white"
-            fill={movie.isBookmarked ? "white" : "none"}
+            fill={isBookmarked ? "white" : "none"}
             strokeWidth={2}
           />
         </button>
