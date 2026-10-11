@@ -1,0 +1,4 @@
+CREATE TABLE category (category_id BIGINT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) NOT NULL);
+CREATE TABLE book (book_id BIGINT AUTO_INCREMENT PRIMARY KEY, category_id BIGINT NOT NULL,
+ title VARCHAR(100) NOT NULL, description TEXT, is_available BOOLEAN NOT NULL DEFAULT TRUE,
+ FOREIGN KEY (category_id) REFERENCES category(category_id));
