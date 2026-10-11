@@ -1,13 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { cn } from "../../utils/cn";
+import { BookmarkButton } from "../bookmark-button";
 import type { Movie } from "../../types/movie";
 
 interface MovieCardProps {
   movie: Movie;
-  onToggleBookmark?: (movieId: number) => void;
 }
 
-export default function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
+export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <article className="overflow-hidden rounded-[10px] bg-white relative">
       <Link
@@ -25,18 +24,7 @@ export default function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
           <p className="text-sm line-clamp-2">{movie.overview}</p>
         </div>
       </Link>
-      {onToggleBookmark && (
-        <button
-          type="button"
-          onClick={() => onToggleBookmark(movie.id)}
-          className={cn(
-            "absolute right-2 top-2 rounded-full p-2 text-white text-xs",
-            movie.isBookmarked ? "bg-blue-600" : "bg-black/60",
-          )}
-        >
-          북마크
-        </button>
-      )}
+      <BookmarkButton movieId={movie.id} className="absolute right-2 top-2" />
     </article>
   );
 }
