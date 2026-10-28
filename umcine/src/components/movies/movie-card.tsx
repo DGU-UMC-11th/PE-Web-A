@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import type { Movie } from "../../types/movie";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { Icon } from "../common/icon";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 interface MovieCardProps {
-  movie: Movie;
+  movie: TmdbMovieListItem;
 }
 
 /**
@@ -17,6 +18,7 @@ function MovieCard({ movie }: MovieCardProps) {
   const isBookmarked = useBookmarkStore((state) =>
     state.bookmarkedMovieIds.includes(movie.id),
   );
+  const posterUrl = getTmdbPosterUrl(movie.poster_path);
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
   return (
@@ -26,13 +28,19 @@ function MovieCard({ movie }: MovieCardProps) {
         params={{ movieId: String(movie.id) }}
         className="flex flex-col"
       >
-        <img
-          src={movie.posterPath}
-          alt={`${movie.title} 포스터`}
-          className="block aspect-[242/274] w-full rounded-[10px] object-cover"
-        />
+        {posterUrl ? (
+  <img
+    src={posterUrl}
+    alt={`${movie.title} 포스터`}
+    className="block aspect-[242/274] w-full rounded-[10px] object-cover"
+  />
+) : (
+  <div className="flex aspect-[242/274] w-full items-center justify-center rounded-[10px] bg-line text-xs text-muted">
+    이미지 없음
+  </div>
+)}
         <h3 className="mt-3 text-[15px] font-bold break-keep text-ink">{movie.title}</h3>
-        <p className="mt-1 text-xs text-subtle">{movie.releaseDate}</p>
+        <p className="mt-1 text-xs text-subtle">{movie.release_date}</p>
       </Link>
 
       <button
