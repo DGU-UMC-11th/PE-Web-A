@@ -2,7 +2,77 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, type SubmitEvent } from "react";
 import { Icon } from "../../components/common/icon";
 import { movies } from "../../data/movies";
+import { useBookmarkStore } from "../../stores/bookmark-store";
+import type { Movie } from "../../types/movie";
 import { cn } from "../../utils/cn";
+
+interface SearchResultItemProps {
+  movie: Movie;
+  hasDivider: boolean;
+  isInLastRow: boolean;
+}
+
+/**
+ * 검색 결과 한 항목. 북마크 상태는 Zustand store에서 읽고 바꾼다.
+ * @param movie 표시할 영화 정보
+ * @param hasDivider 아래 구분선을 그릴지 여부
+ * @param isInLastRow lg 이상 2열 그리드의 마지막 행인지 여부
+ */
+function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemProps) {
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(movie.id),
+  );
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+
+  return (
+    <li
+      className={cn(
+        "flex gap-3 py-5 sm:gap-[18px]",
+        hasDivider && "border-b border-line",
+        isInLastRow && "lg:border-b-0",
+      )}
+    >
+      <div className="relative shrink-0">
+        <img
+          src={movie.posterPath}
+          alt={`${movie.title} 포스터`}
+          className="h-[145px] w-24 shrink-0 rounded-[10px] bg-page object-cover sm:h-[190px] sm:w-[126px]"
+        />
+        <button
+          type="button"
+          className={cn(
+            "absolute top-2.5 right-2.5 flex size-[34px] cursor-pointer items-center justify-center rounded-lg border border-white",
+            isBookmarked ? "bg-brand" : "bg-black/60",
+          )}
+          onClick={() => toggleBookmark(movie.id)}
+          aria-label={`${movie.title} ${isBookmarked ? "북마크 해제" : "북마크 추가"}`}
+          aria-pressed={isBookmarked}
+        >
+          <Icon
+            name={isBookmarked ? "bookmark" : "bookmark-outline"}
+            className="size-5 text-white"
+          />
+        </button>
+      </div>
+      <div className="flex min-w-0 flex-col gap-2">
+        <h3 className="text-lg/6 font-bold break-keep text-ink">{movie.title}</h3>
+        <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs/[14px] text-subtle">
+          <span>{movie.originalTitle}</span>
+          <span>{movie.releaseDate}</span>
+        </p>
+        <p className="line-clamp-3 text-[12.5px]/5 text-muted">{movie.overview}</p>
+        <Link
+          to="/movies/$movieId"
+          params={{ movieId: String(movie.id) }}
+          className="inline-flex items-center gap-1 self-start text-xs/[14px] font-extrabold text-brand"
+        >
+          상세 보기
+          <Icon name="arrow-right" className="size-4 text-brand" />
+        </Link>
+      </div>
+    </li>
+  );
+}
 
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
@@ -114,36 +184,12 @@ export function SearchPage() {
       ) : (
         <ul className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
           {searchResults.map((movie, index) => (
-            <li
+            <SearchResultItem
               key={movie.id}
-              className={cn(
-                "flex gap-3 py-5 sm:gap-[18px]",
-                index < searchResults.length - 1 && "border-b border-line",
-                index >= lastRowStartIndex && "lg:border-b-0",
-              )}
-            >
-              <img
-                src={movie.posterPath}
-                alt={`${movie.title} 포스터`}
-                className="h-[145px] w-24 shrink-0 rounded-[10px] bg-page object-cover sm:h-[190px] sm:w-[126px]"
-              />
-              <div className="flex min-w-0 flex-col gap-2">
-                <h3 className="text-lg/6 font-bold break-keep text-ink">{movie.title}</h3>
-                <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs/[14px] text-subtle">
-                  <span>{movie.originalTitle}</span>
-                  <span>{movie.releaseDate}</span>
-                </p>
-                <p className="line-clamp-3 text-[12.5px]/5 text-muted">{movie.overview}</p>
-                <Link
-                  to="/movies/$movieId"
-                  params={{ movieId: String(movie.id) }}
-                  className="inline-flex items-center gap-1 self-start text-xs/[14px] font-extrabold text-brand"
-                >
-                  상세 보기
-                  <Icon name="arrow-right" className="size-4 text-brand" />
-                </Link>
-              </div>
-            </li>
+              movie={movie}
+              hasDivider={index < searchResults.length - 1}
+              isInLastRow={index >= lastRowStartIndex}
+            />
           ))}
         </ul>
       )}
