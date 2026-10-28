@@ -1,13 +1,14 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
+import { searchMovies } from "../../api/movies/search-movies";
+import type { TmdbMovieListItem } from "../../api/movies/models";
 import { Icon } from "../../components/common/icon";
-import { movies } from "../../data/movies";
 import { useBookmarkStore } from "../../stores/bookmark-store";
-import type { Movie } from "../../types/movie";
 import { cn } from "../../utils/cn";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 interface SearchResultItemProps {
-  movie: Movie;
+  movie: TmdbMovieListItem;
   hasDivider: boolean;
   isInLastRow: boolean;
 }
@@ -23,6 +24,7 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
     state.bookmarkedMovieIds.includes(movie.id),
   );
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const posterUrl = getTmdbPosterUrl(movie.poster_path);
 
   return (
     <li
@@ -33,11 +35,17 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
       )}
     >
       <div className="relative shrink-0">
-        <img
-          src={movie.posterPath}
-          alt={`${movie.title} 포스터`}
-          className="h-[145px] w-24 shrink-0 rounded-[10px] bg-page object-cover sm:h-[190px] sm:w-[126px]"
-        />
+        {posterUrl ? (
+          <img
+            src={posterUrl}
+            alt={`${movie.title} 포스터`}
+            className="h-[145px] w-24 shrink-0 rounded-[10px] bg-page object-cover sm:h-[190px] sm:w-[126px]"
+          />
+        ) : (
+          <div className="flex h-[145px] w-24 shrink-0 items-center justify-center rounded-[10px] bg-line text-xs text-muted sm:h-[190px] sm:w-[126px]">
+            이미지 없음
+          </div>
+        )}
         <button
           type="button"
           className={cn(
@@ -57,8 +65,8 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
       <div className="flex min-w-0 flex-col gap-2">
         <h3 className="text-lg/6 font-bold break-keep text-ink">{movie.title}</h3>
         <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs/[14px] text-subtle">
-          <span>{movie.originalTitle}</span>
-          <span>{movie.releaseDate}</span>
+          <span>{movie.original_title}</span>
+          <span>{movie.release_date}</span>
         </p>
         <p className="line-clamp-3 text-[12.5px]/5 text-muted">{movie.overview}</p>
         <Link
@@ -77,24 +85,50 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
+  const requestQuery = query?.trim() ?? "";
+  const hasQuery = requestQuery !== "";
+
   const [searchText, setSearchText] = useState(query ?? "");
   const [prevQuery, setPrevQuery] = useState(query);
+  const [searchResults, setSearchResults] = useState<TmdbMovieListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(hasQuery);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // URL의 query가 바뀌면 입력창도 그 값으로 맞춘다.
+  // URL의 query가 바뀌면 입력창을 그 값으로 맞추고, 새 검색의 로딩을 시작한다.
   if (query !== prevQuery) {
     setPrevQuery(query);
     setSearchText(query ?? "");
+    setIsLoading(Boolean(query?.trim()));
+    setErrorMessage(null);
   }
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const hasQuery = normalizedQuery !== "";
-  const searchResults = hasQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  useEffect(() => {
+    if (!requestQuery) return;
+
+    let ignore = false;
+
+    searchMovies({ query: requestQuery })
+      .then((response) => {
+        if (!ignore) {
+          setSearchResults(response.results);
+          setErrorMessage(null);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setSearchResults([]);
+          setErrorMessage("검색 결과를 불러오지 못했어요.");
+        }
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [requestQuery]);
+
   // lg 이상 2열 그리드의 마지막 행이 시작하는 index (마지막 행은 아래 구분선을 그리지 않는다)
   const lastRowStartIndex = searchResults.length - (searchResults.length % 2 || 2);
 
@@ -176,10 +210,16 @@ export function SearchPage() {
 
       <div className="mt-6 flex h-[54px] items-center justify-between gap-3 border-y border-line">
         <h2 className="min-w-0 truncate text-lg/[21px] font-bold text-ink">‘{query}’ 검색 결과</h2>
-        <p className="shrink-0 text-xs/[14px] whitespace-nowrap text-subtle">영화 {searchResults.length}편 · 1페이지</p>
+        <p className="shrink-0 text-xs/[14px] whitespace-nowrap text-subtle">
+          영화 {isLoading ? 0 : searchResults.length}편 · 1페이지
+        </p>
       </div>
 
-      {searchResults.length === 0 ? (
+      {isLoading ? (
+        <p className="py-10 text-center text-sm text-subtle">검색 결과를 불러오는 중이에요.</p>
+      ) : errorMessage ? (
+        <p className="py-10 text-center text-sm text-subtle">{errorMessage}</p>
+      ) : searchResults.length === 0 ? (
         <p className="py-10 text-center text-sm text-subtle">검색 결과가 없어요.</p>
       ) : (
         <ul className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
