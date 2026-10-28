@@ -95,6 +95,11 @@ export function MovieDetailPage() {
         style={backdropUrl ? { backgroundImage: `url(${backdropUrl})` } : undefined}
       >
         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+        {!backdropUrl && (
+          <span className="absolute inset-0 flex items-center justify-center text-xs text-white/80">
+            이미지 없음
+          </span>
+        )}
         <div className="relative mx-auto flex h-full max-w-[1440px] flex-col justify-between px-4 py-6 lg:px-20">
           <Link
             to="/"
