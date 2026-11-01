@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5주차 · 영화 평점 서비스</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111321;color:#edf0ff;font:16px/1.6 system-ui,sans-serif}main{max-width:1050px;margin:60px auto;padding:24px}h1{font-size:38px;margin:8px 0}small{color:#abafff;letter-spacing:2px}.intro{color:#aeb5cc}section{background:#1d2134;border:1px solid #363d57;border-radius:18px;padding:24px;margin:22px 0}label{display:block;color:#bec7e0;margin-bottom:8px}input{padding:12px;border:1px solid #4a5472;border-radius:8px;background:#111626;color:white;font:inherit;max-width:100%}button{padding:12px 20px;border:0;border-radius:8px;background:#b9b1ff;color:#19132e;font:inherit;cursor:pointer}button:disabled{opacity:.5}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101422;padding:18px;border-radius:10px;min-height:70px;color:#c6f3de}code{color:#b9b1ff}.status{color:#e4ce9c}#baseUrl{width:350px}.row{display:flex;gap:12px;flex-wrap:wrap}
+</style>
+<main><small>UMC / BACKEND WEEK 05</small><h1>영화 취향을 연결하는 첫 API</h1>
+<p class="intro">회원 중복 확인부터 나의 평점까지. 버튼을 눌러 서버의 실제 응답을 확인하세요.</p>
+<label for="baseUrl">백엔드 주소</label><input id="baseUrl" value="http://localhost:8081" type="url">
+<p class="intro" id="origin"></p>
+<section><h2>01 닉네임 중복 확인</h2><label for="nickname">닉네임</label><div class="row"><input id="nickname" value="수현"><button data-kind="nickname">중복 확인</button></div><p><code id="url-nickname">GET /members/nickname/{nickname}</code></p><p class="status" id="status-nickname">요청 대기</p><pre id="result-nickname">응답이 여기에 표시됩니다.</pre></section>
+<section><h2>02 이메일 중복 확인</h2><label for="email">이메일</label><div class="row"><input id="email" value="noco@umc.com" type="email"><button data-kind="email">중복 확인</button></div><p><code id="url-email">GET /members/email/{email}</code></p><p class="status" id="status-email">요청 대기</p><pre id="result-email">응답이 여기에 표시됩니다.</pre></section>
+<section><h2>03 나의 영화 평점</h2><label for="ratings">회원 ID</label><div class="row"><input id="ratings" value="1" type="number" min="1"><button data-kind="ratings">평점 조회</button></div><p><code id="url-ratings">GET /members/{memberId}/ratings</code></p><p class="status" id="status-ratings">요청 대기</p><pre id="result-ratings">응답이 여기에 표시됩니다.</pre></section>
+</main><script>
+document.getElementById('origin').textContent='현재 화면 출처: '+location.origin;
+for (const button of document.querySelectorAll('button')) {
+ button.addEventListener('click',async()=>{
+  const kind=button.dataset.kind;
+  const value=encodeURIComponent(document.getElementById(kind).value);
+  const path=kind==='ratings'?`/members/${value}/ratings`:`/members/${kind}/${value}`;
+  const url=document.getElementById('baseUrl').value.replace(/\/$/,'')+path;
+  const status=document.getElementById('status-'+kind);
+  const output=document.getElementById('result-'+kind);
+  document.getElementById('url-'+kind).textContent='GET '+url;
+  button.disabled=true;status.textContent='요청 중…';
+  try {
+   const response=await fetch(url);
+   const data=await response.json();
+   status.textContent=`HTTP ${response.status} · ${response.ok?'응답 완료':'요청 오류'}`;
+   output.textContent=JSON.stringify(data,null,2);
+  } catch(error) {
+   status.textContent='응답을 읽지 못했습니다';
+   output.textContent=error.message+'\n서버 실행 상태와 CORS 허용 출처를 확인하고 개발자 도구 Console을 확인하세요.';
+   console.error(error);
+  } finally {button.disabled=false;}
+ });
+}
+</script></html>
