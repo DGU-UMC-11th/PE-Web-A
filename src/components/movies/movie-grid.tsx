@@ -1,8 +1,8 @@
-import type { Movie } from "../../types/movie";
+import type { MovieListItem } from "../../types/movie";
 import MovieCard from "./movie-card";
 
 interface MovieGridProps {
-    movies: Movie[];
+    movies: MovieListItem[];
     columns?: 3 | 5;
 }
 
