@@ -1,19 +1,25 @@
+
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 
 import Footer from "../../components/footer";
 import { movies } from "../../data/movies";
+import { useBookmarkStore } from "../../stores/bookmark-store";
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
 
-  const movie = movies.find((movie) => movie.id === Number(movieId));
+  const movie = movies.find(
+    (movie) => movie.id === Number(movieId)
+  );
 
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
-  const [isBookmarked, setIsBookmarked] = useState(
-    movie?.isBookmarked ?? false,
+
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(Number(movieId)),
   );
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
   if (!movie) {
     return (
@@ -82,7 +88,8 @@ export function MovieDetailPage() {
 
           <button
             type="button"
-            onClick={() => setIsBookmarked((current) => !current)}
+            onClick={() => toggleBookmark(Number(movieId))}
+            aria-pressed={isBookmarked}
             className="mt-[16px] flex h-[42px] w-[106px] items-center justify-center gap-[8px] rounded-[8px] bg-[#2563eb] text-[14px] font-bold text-white"
           >
             <img
@@ -118,7 +125,9 @@ export function MovieDetailPage() {
               >
                 <span
                   className={
-                    star <= rating ? "text-[#f7b500]" : "text-[#606774]"
+                    star <= rating
+                      ? "text-[#f7b500]"
+                      : "text-[#606774]"
                   }
                 >
                   ★
