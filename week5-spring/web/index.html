@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UMCine 회원 · 평점</title>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<header><strong>UMCine</strong><span>회원 · 평점</span></header>
+<main>
+<h1>나의 영화 생활</h1>
+<p>사용할 닉네임과 이메일을 확인하고 회원의 영화 평점을 조회해 보세요.</p>
+<div class="grid">
+<section><h2>닉네임 확인</h2>
+<form data-kind="nickname"><label for="nickname">닉네임</label><div class="input-row"><input id="nickname" name="value" value="수현" required maxlength="50"><button>중복 확인</button></div></form>
+<p class="status" role="status" id="nickname-status">닉네임을 입력하고 확인해 주세요.</p>
+<details><summary>요청 · 응답 보기</summary><pre id="nickname-response">아직 요청하지 않았어요.</pre></details>
+</section>
+<section><h2>이메일 확인</h2>
+<form data-kind="email"><label for="email">이메일</label><div class="input-row"><input id="email" name="value" type="email" value="noco@umc.com" required><button>중복 확인</button></div></form>
+<p class="status" role="status" id="email-status">이메일을 입력하고 확인해 주세요.</p>
+<details><summary>요청 · 응답 보기</summary><pre id="email-response">아직 요청하지 않았어요.</pre></details>
+</section>
+</div>
+<section><h2>회원별 영화 평점</h2>
+<form data-kind="ratings"><label for="member">회원 번호</label><div class="input-row"><input id="member" name="value" type="number" min="1" step="1" value="1" required><button>평점 조회</button></div></form>
+<p class="status" role="status" id="ratings-status">조회할 회원 번호를 입력해 주세요.</p>
+<ul id="ratings-list"></ul>
+<details><summary>요청 · 응답 보기</summary><pre id="ratings-response">아직 요청하지 않았어요.</pre></details>
+</section>
+<p class="note">이번 주차는 조회 기능을 제공합니다. 회원가입과 평점 작성은 다음 주차에 연결합니다.</p>
+</main>
+</body></html>
