@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { BookmarkButton } from "../bookmark-button";
 
-import type { Movie } from "../../types/movie";
+import type { MovieListItem } from "../../types/movie";
 
 interface MovieCardProps {
-  movie: Movie;
+  movie: MovieListItem;
 }
 
 export default function MovieCard({
@@ -17,11 +17,11 @@ export default function MovieCard({
           to="/movies/$movieId"
           params={{ movieId: String(movie.id) }}
         >
-          <img
+          {movie.posterPath ? <img
             className="block h-full w-full object-cover"
             src={movie.posterPath}
             alt={`${movie.title} 포스터`}
-          />
+          /> : <div className="flex h-full items-center justify-center bg-gray-200">포스터 없음</div>}
         </Link>
 
         <BookmarkButton movieId={movie.id} />
@@ -38,7 +38,7 @@ export default function MovieCard({
       </Link>
 
       <p className="m-0 text-xs font-normal leading-4 text-[#969da8]">
-        {movie.releaseDate}
+        {movie.releaseDate || "개봉일 미정"}
       </p>
     </article>
   );
