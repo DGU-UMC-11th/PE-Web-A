@@ -1,6 +1,6 @@
 # 5주차 · 영화 평점 서비스 (#63)
 
-새로운 Spring Boot 3.5.0 / Java 21 / Gradle 프로젝트다. 3·4주차 도서 API는 변경하지 않는다.
+새로운 Spring Boot 3.5.16 / Java 21 / Gradle 프로젝트다. 3·4주차 도서 API는 변경하지 않는다.
 Spring Initializr 다운로드본은 아니며 워크북의 의존성/구조를 직접 구성하고 기존 Gradle Wrapper만 재사용했다.
 
 ## 구조
