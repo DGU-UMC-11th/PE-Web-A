@@ -1,7 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import type { TmdbMovieDetail } from "../../api/movies/models";
 import { BookmarkButton } from "../../components/bookmark-button";
 import { MovieImage } from "../../components/movies/movie-image";
 import { StatusMessage } from "../../components/status-message";
@@ -14,56 +13,28 @@ export function MovieDetailPage() {
   const parsedMovieId = Number(movieId);
   const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
 
-  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    setMovie(null);
-    setErrorMessage(null);
-
-    if (!isValidMovieId) {
-      setIsLoading(false);
-      return;
-    }
-
-    async function loadMovie() {
-      setIsLoading(true);
-
-      try {
-        const response = await getMovieDetail(parsedMovieId);
-        if (!ignore) setMovie(response);
-      } catch (error) {
-        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
-      } finally {
-        if (!ignore) setIsLoading(false);
-      }
-    }
-
-    loadMovie();
-
-    return () => {
-      ignore = true;
-    };
-  }, [parsedMovieId, isValidMovieId]);
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", parsedMovieId],
+    queryFn: () => getMovieDetail(parsedMovieId),
+    enabled: isValidMovieId,
+    staleTime: 30 * 1000, // 미니 실습: 상세 화면만 30초 동안 fresh
+  });
 
   if (!isValidMovieId) {
     return <StatusMessage message="올바르지 않은 영화 번호예요." tone="error" />;
   }
 
-  if (isLoading) {
+  if (movieDetailQuery.isPending) {
     return <StatusMessage message="영화 정보를 불러오는 중이에요." />;
   }
 
-  if (errorMessage) {
-    return <StatusMessage message={errorMessage} tone="error" />;
+  if (movieDetailQuery.isError) {
+    return (
+      <StatusMessage message={getMovieDetailErrorMessage(movieDetailQuery.error)} tone="error" />
+    );
   }
 
-  if (!movie) {
-    return <StatusMessage message="영화를 찾을 수 없어요." tone="error" />;
-  }
+  const movie = movieDetailQuery.data;
 
   return (
     <main>

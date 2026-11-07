@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import type { TmdbMovieListItem } from "../../api/movies/models";
+import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/search-movies";
 import { BookmarkButton } from "../../components/bookmark-button";
 import { MovieImage } from "../../components/movies/movie-image";
@@ -12,45 +12,21 @@ export function SearchPage() {
   const navigate = useNavigate({ from: "/search" });
   const [searchText, setSearchText] = useState(query);
 
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   // 뒤로 가기 등으로 주소의 query가 바뀌면 입력창도 맞춰요.
   useEffect(() => {
     setSearchText(query);
   }, [query]);
 
-  // query가 바뀔 때마다 TMDB에 검색을 요청해요.
-  useEffect(() => {
-    let ignore = false;
-    const normalizedQuery = query.trim();
+  const normalizedQuery = query.trim();
 
-    setMovies([]);
-    setErrorMessage(null);
+  // 검색어가 있을 때만 TMDB에 검색을 요청해요.
+  const searchQuery = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery }],
+    queryFn: () => searchMovies({ query: normalizedQuery }),
+    enabled: normalizedQuery.length > 0,
+  });
 
-    if (!normalizedQuery) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    searchMovies({ query: normalizedQuery })
-      .then((response) => {
-        if (!ignore) setMovies(response.results);
-      })
-      .catch(() => {
-        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [query]);
+  const movies = searchQuery.data?.results ?? [];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,8 +35,6 @@ export function SearchPage() {
       search: nextQuery ? { query: nextQuery } : {},
     });
   }
-
-  const normalizedQuery = query.trim();
 
   return (
     <main className="mx-auto max-w-5xl px-8 py-8">
@@ -81,10 +55,10 @@ export function SearchPage() {
 
       {!normalizedQuery ? (
         <StatusMessage message="검색어를 입력해 주세요." />
-      ) : isLoading ? (
+      ) : searchQuery.isLoading ? (
         <StatusMessage message="검색 결과를 불러오는 중이에요." />
-      ) : errorMessage ? (
-        <StatusMessage message={errorMessage} tone="error" />
+      ) : searchQuery.isError ? (
+        <StatusMessage message="검색 결과를 불러오지 못했어요." tone="error" />
       ) : movies.length === 0 ? (
         <StatusMessage message="검색 결과가 없어요." />
       ) : (
