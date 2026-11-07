@@ -1,52 +1,70 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { BookmarkButton } from "../../components/bookmark-button"; 
-import { movies } from "../../data/movies";
+import { useQuery } from "@tanstack/react-query";
+import { getMovieDetail } from "../../api/movies/get-movie-detail";
+import { BookmarkButton } from "../../components/bookmark-button";
+import { MovieImage } from "../../components/movies/movie-image";
+import { StatusMessage } from "../../components/status-message";
+import { formatRuntime } from "../../utils/movies/format-runtime";
+import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
+import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
-  const movie = movies.find((item) => item.id === Number(movieId));
+  const parsedMovieId = Number(movieId);
+  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
 
-  if (!movie) {
-    return <main className="p-6">영화를 찾을 수 없어요.</main>;
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", parsedMovieId],
+    queryFn: () => getMovieDetail(parsedMovieId),
+    enabled: isValidMovieId,
+    staleTime: 30 * 1000, // 미니 실습: 상세 화면만 30초 동안 fresh
+  });
+
+  if (!isValidMovieId) {
+    return <StatusMessage message="올바르지 않은 영화 번호예요." tone="error" />;
   }
+
+  if (movieDetailQuery.isPending) {
+    return <StatusMessage message="영화 정보를 불러오는 중이에요." />;
+  }
+
+  if (movieDetailQuery.isError) {
+    return (
+      <StatusMessage message={getMovieDetailErrorMessage(movieDetailQuery.error)} tone="error" />
+    );
+  }
+
+  const movie = movieDetailQuery.data;
 
   return (
     <main>
-      {/* 상단 배경 포스터 영역 */}
-      <div className="relative h-64 w-full bg-black">
-        {movie.backdropPath && (
-          <img
-            src={movie.backdropPath}
-            alt=""
-            aria-hidden="true"
-            className="h-full w-full object-cover opacity-60"
-          />
-        )}
-        <div className="absolute bottom-4 left-6 text-white">
-          <Link to="/" className="text-xs text-gray-300 hover:underline">
-            영화 목록
-          </Link>
-          <h1 className="text-2xl font-bold mt-1">{movie.title}</h1>
-          <p className="text-xs text-gray-300 mt-1">{movie.originalTitle}</p>
-          <p className="text-xs text-gray-400">
-            {movie.releaseDate} · {movie.genres.join(", ")} · {movie.runtime}분
-          </p>
-          <BookmarkButton movieId={movie.id} className="mt-3" /> {}
-        </div>
+      <div className="relative h-80 w-full">
+        <MovieImage
+          src={getTmdbBackdropUrl(movie.backdrop_path)}
+          alt=""
+          className="h-full w-full"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" aria-hidden="true" />
       </div>
 
-      {/* 하단 포스터와 상세 내용 */}
-      <div className="p-6 flex gap-6 max-w-4xl">
-        <img
-          src={movie.posterPath}
+      <div className="mx-auto -mt-32 flex max-w-5xl flex-col gap-8 px-8 sm:flex-row">
+        <MovieImage
+          src={getTmdbPosterUrl(movie.poster_path)}
           alt={`${movie.title} 포스터`}
-          className="w-40 rounded shadow-md object-cover self-start"
+          className="relative aspect-[2/3] w-48 shrink-0 rounded-lg shadow-lg"
         />
-        <div>
-          <h2 className="text-base font-bold text-gray-900">{movie.tagline}</h2>
-          <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-            {movie.overview}
-          </p>
+        <div className="relative flex flex-col gap-2 pt-4 sm:pt-36">
+          <Link to="/" className="text-sm text-neutral-500 underline">
+            ← 영화 목록
+          </Link>
+          <h1 className="text-3xl font-bold">{movie.title}</h1>
+          <p className="text-neutral-500">{movie.original_title}</p>
+          <p>{movie.release_date || "개봉일 정보 없음"}</p>
+          <p>{movie.genres.map((genre) => genre.name).join(", ") || "장르 정보 없음"}</p>
+          <p>{formatRuntime(movie.runtime)}</p>
+          {movie.tagline && <h2 className="mt-4 text-xl font-bold">{movie.tagline}</h2>}
+          <p className="leading-relaxed">{movie.overview || "줄거리 정보가 없어요."}</p>
+          <BookmarkButton movieId={movie.id} className="mt-2 self-start" />
         </div>
       </div>
     </main>

@@ -1,27 +1,34 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { searchMovies } from "../../api/movies/search-movies";
 import { BookmarkButton } from "../../components/bookmark-button";
-import { movies } from "../../data/movies";
+import { MovieImage } from "../../components/movies/movie-image";
+import { StatusMessage } from "../../components/status-message";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function SearchPage() {
-  const { query } = useSearch({ from: "/search" });
+  const { query = "" } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
-  const [searchText, setSearchText] = useState(query ?? "");
+  const [searchText, setSearchText] = useState(query);
 
+  // 뒤로 가기 등으로 주소의 query가 바뀌면 입력창도 맞춰요.
   useEffect(() => {
-    setSearchText(query ?? "");
+    setSearchText(query);
   }, [query]);
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const searchResults = normalizedQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  const normalizedQuery = query.trim();
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  // 검색어가 있을 때만 TMDB에 검색을 요청해요.
+  const searchQuery = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery }],
+    queryFn: () => searchMovies({ query: normalizedQuery }),
+    enabled: normalizedQuery.length > 0,
+  });
+
+  const movies = searchQuery.data?.results ?? [];
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextQuery = searchText.trim();
     navigate({
@@ -30,71 +37,57 @@ export function SearchPage() {
   }
 
   return (
-    <main className="p-8 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">영화 검색</h1>
+    <main className="mx-auto max-w-5xl px-8 py-8">
+      <h1 className="mb-6 text-2xl font-bold">영화 검색</h1>
 
-      {/* 검색 입력 폼 (가로로 긴 input과 검은색 버튼) */}
-      <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
+      <form onSubmit={handleSubmit} className="mb-8 flex gap-2">
         <input
           aria-label="검색어"
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 flex-1 text-sm outline-none"
+          placeholder="영화 제목을 입력해 주세요"
+          className="flex-1 rounded border border-neutral-300 px-4 py-2"
         />
-        <button
-          type="submit"
-          className="bg-black text-white px-4 py-2 rounded text-sm font-medium"
-        >
+        <button type="submit" className="rounded bg-neutral-900 px-5 py-2 font-bold text-white">
           검색
         </button>
       </form>
 
-      {/* 상황별 안내 문구 및 결과 리스트 */}
       {!normalizedQuery ? (
-        <p className="text-xs text-gray-500">검색어를 입력해 주세요.</p>
-      ) : searchResults.length === 0 ? (
-        <p className="text-xs text-gray-500">검색 결과가 없어요.</p>
+        <StatusMessage message="검색어를 입력해 주세요." />
+      ) : searchQuery.isLoading ? (
+        <StatusMessage message="검색 결과를 불러오는 중이에요." />
+      ) : searchQuery.isError ? (
+        <StatusMessage message="검색 결과를 불러오지 못했어요." tone="error" />
+      ) : movies.length === 0 ? (
+        <StatusMessage message="검색 결과가 없어요." />
       ) : (
-        <div className="mt-6">
-          <p className="text-xs text-gray-500 mb-4">
-            '{query}' 검색 결과 ({searchResults.length}개)
-          </p>
-          <ul className="flex flex-col gap-4">
-            {searchResults.map((movie) => (
-              <li
-                key={movie.id}
-                className="flex gap-4 border p-3 rounded bg-white"
-              >
-                <img
-                  src={movie.posterPath}
-                  alt={`${movie.title} 포스터`}
-                  className="w-20 rounded object-cover"
-                />
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-sm">{movie.title}</h3>
-                    <p className="text-xs text-gray-500">{movie.originalTitle}</p>
-                    <p className="text-xs text-gray-400 mt-1">{movie.releaseDate}</p>
-                    <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                      {movie.overview}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-2 flex items-center gap-3">
-                    <Link
-                      to="/movies/$movieId"
-                      params={{ movieId: String(movie.id) }}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      상세 보기
-                    </Link>
-                    <BookmarkButton movieId={movie.id} />
-                  </div>
+        <>
+          <h2 className="mb-1 text-xl font-bold">‘{normalizedQuery}’ 검색 결과</h2>
+          <p className="mb-6 text-neutral-500">영화 {movies.length}편</p>
+          <ul className="flex flex-col gap-6">
+            {movies.map((movie) => (
+              <li key={movie.id} className="flex gap-4">
+                <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }} className="shrink-0">
+                  <MovieImage
+                    src={getTmdbPosterUrl(movie.poster_path)}
+                    alt={`${movie.title} 포스터`}
+                    className="h-48 w-32 rounded"
+                  />
+                </Link>
+                <div className="flex min-w-0 flex-col gap-1">
+                  <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
+                    <h3 className="text-lg font-bold">{movie.title}</h3>
+                  </Link>
+                  <p className="text-sm text-neutral-500">{movie.original_title}</p>
+                  <p className="text-sm text-neutral-500">{movie.release_date || "개봉일 정보 없음"}</p>
+                  <p className="line-clamp-3 text-sm">{movie.overview || "줄거리 정보가 없어요."}</p>
+                  <BookmarkButton movieId={movie.id} className="mt-2 self-start" />
                 </div>
               </li>
             ))}
           </ul>
-        </div>
+        </>
       )}
     </main>
   );
