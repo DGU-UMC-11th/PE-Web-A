@@ -1,0 +1,18 @@
+{
+  "source": "Actual TMDB responses forwarded unchanged by a temporary local audit proxy; no mocks. Authorization headers and tokens were not recorded.",
+  "scenario": "Browser navigation: page 1 → page 2 → page 1 within staleTime",
+  "expectedRequests": 2,
+  "actualRequests": 2,
+  "requests": [
+    {
+      "path": "/3/movie/popular?language=ko-KR&page=1",
+      "status": 200,
+      "durationMs": 739
+    },
+    {
+      "path": "/3/movie/popular?language=ko-KR&page=2",
+      "status": 200,
+      "durationMs": 804
+    }
+  ]
+}
