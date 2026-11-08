@@ -1,71 +1,66 @@
 
 import { useEffect, useState } from "react";
-import { useSearch } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { searchMovies } from "../../api/movies/search-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function SearchPage() {
-  const search = useSearch({ strict: false });
-  const query = typeof search.query === "string" ? search.query : "";
+  const { query } = useSearch({ from: "/search" });
+  const normalizedQuery = query?.trim() ?? "";
 
-  const [inputValue, setInputValue] = useState(query);
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const navigate = useNavigate({ from: "/search" });
 
-  useEffect(() => {
-    setInputValue(query);
-  }, [query]);
+  const [inputValue, setInputValue] = useState(
+    normalizedQuery
+  );
 
   useEffect(() => {
-    let ignore = false;
-    const normalizedQuery = query.trim();
+    setInputValue(normalizedQuery);
+  }, [normalizedQuery]);
 
-    setMovies([]);
-    setErrorMessage(null);
+  const searchQuery = useQuery({
+    queryKey: [
+      "movies",
+      "search",
+      { query: normalizedQuery },
+    ],
+    queryFn: () =>
+      searchMovies({ query: normalizedQuery }),
+    enabled: normalizedQuery.length > 0,
+  });
 
-    if (!normalizedQuery) {
-      setIsLoading(false);
-      return;
-    }
+  const searchResults = searchQuery.data?.results ?? [];
 
-    setIsLoading(true);
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
 
-    searchMovies({ query: normalizedQuery })
-      .then((response) => {
-        if (!ignore) {
-          setMovies(response.results);
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setErrorMessage("검색 결과를 불러오지 못했어요.");
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [query, retryCount]);
+    void navigate({
+      to: "/search",
+      search: { query: inputValue.trim() },
+    });
+  };
 
   return (
-    <main style={{ padding: "24px", maxWidth: "1200px", margin: "auto" }}>
+    <main
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "auto",
+      }}
+    >
       <h1>영화 검색</h1>
 
       <nav style={{ marginBottom: "24px" }}>
-        <a href="/">인기 영화로 돌아가기</a>
+        <Link to="/">인기 영화로 돌아가기</Link>
       </nav>
 
       <form
-        action="/search"
-        method="get"
+        onSubmit={handleSearch}
         style={{
           display: "flex",
           gap: "10px",
@@ -75,7 +70,9 @@ export function SearchPage() {
         <input
           name="query"
           value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
+          onChange={(event) =>
+            setInputValue(event.target.value)
+          }
           placeholder="영화 제목을 입력하세요."
           style={{
             flex: 1,
@@ -88,37 +85,46 @@ export function SearchPage() {
         <button type="submit">검색</button>
       </form>
 
-      {!query.trim() ? (
+      {!normalizedQuery ? (
         <p>검색어를 입력해 주세요.</p>
-      ) : isLoading ? (
-        <p>영화를 검색하는 중이에요.</p>
-      ) : errorMessage ? (
+      ) : searchQuery.isLoading ? (
+        <p>검색 결과를 불러오는 중이에요.</p>
+      ) : searchQuery.isError ? (
         <div>
-          <p>{errorMessage}</p>
-          <button onClick={() => setRetryCount((count) => count + 1)}>
+          <p>{searchQuery.error.message}</p>
+          <button
+            onClick={() => {
+              void searchQuery.refetch();
+            }}
+          >
             다시 시도
           </button>
         </div>
-      ) : movies.length === 0 ? (
+      ) : searchQuery.isSuccess &&
+        searchResults.length === 0 ? (
         <p>검색 결과가 없어요.</p>
       ) : (
         <>
-          <h2>"{query}" 검색 결과</h2>
+          <h2>"{normalizedQuery}" 검색 결과</h2>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(180px, 1fr))",
               gap: "20px",
             }}
           >
-            {movies.map((movie) => {
-              const posterUrl = getTmdbPosterUrl(movie.poster_path);
+            {searchResults.map((movie) => {
+              const posterUrl = getTmdbPosterUrl(
+                movie.poster_path
+              );
 
               return (
-                <a
+                <Link
                   key={movie.id}
-                  href={`/movies/${movie.id}`}
+                  to="/movies/$movieId"
+                  params={{ movieId: String(movie.id) }}
                   style={{
                     textDecoration: "none",
                     color: "inherit",
@@ -154,20 +160,38 @@ export function SearchPage() {
 
                   <div style={{ padding: "12px" }}>
                     <h3>{movie.title}</h3>
-                    <p>개봉일: {movie.release_date || "정보 없음"}</p>
-                    <p>평점: {movie.vote_average.toFixed(1)}</p>
+                    <p>
+                      개봉일:{" "}
+                      {movie.release_date || "정보 없음"}
+                    </p>
+                    <p>
+                      평점: {movie.vote_average.toFixed(1)}
+                    </p>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>
         </>
       )}
 
-      <footer style={{ marginTop: "50px", textAlign: "center" }}>
-        <a href="https://www.themoviedb.org/">TMDB</a>
+      <footer
+        style={{
+          marginTop: "50px",
+          textAlign: "center",
+        }}
+      >
+        <a
+          href="https://www.themoviedb.org/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          TMDB
+        </a>
+
         <p style={{ fontSize: "12px" }}>
-          This product uses the TMDB API but is not endorsed or certified by TMDB.
+          This product uses the TMDB API but is
+          not endorsed or certified by TMDB.
         </p>
       </footer>
     </main>
