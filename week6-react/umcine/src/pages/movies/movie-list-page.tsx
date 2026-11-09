@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { MovieGrid } from '../../components/movies/movie-grid';
 import { Pagination } from '../../components/movies/pagination';
 import { getMovies } from '../../api/movies/get-movies';
@@ -10,6 +10,7 @@ export function MovieListPage() {
   const moviesQuery = useQuery({
     queryKey: ['movies', 'list', { page }],
     queryFn: ({ signal }) => getMovies({ page, signal }),
+    placeholderData: keepPreviousData,
   });
   const movies = moviesQuery.data?.results ?? [];
   // TMDB 목록 API가 허용하는 페이지는 최대 500이다.
