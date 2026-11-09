@@ -133,4 +133,44 @@ class WriteApiTest {
         mvc.perform(post("/members").contentType(MediaType.APPLICATION_JSON).content("{broken"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("COMMON4002"));
     }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 5})
+    void scoreBoundariesAndFiveHundredCharacterCommentAreAccepted(int score) throws Exception {
+        String comment = "가".repeat(500);
+        String body = mapper.writeValueAsString(Map.of("movieId", 27205, "score", score, "comment", comment));
+        String response = mvc.perform(post("/members/1/ratings").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long id = mapper.readTree(response).get("result").asLong();
+        assertThat(jdbc.queryForObject("SELECT score FROM rating WHERE rating_id=?", Integer.class, id)).isEqualTo(score);
+        assertThat(jdbc.queryForObject("SELECT comment FROM rating WHERE rating_id=?", String.class, id)).isEqualTo(comment);
+        mvc.perform(patch("/members/1/ratings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("score", 6 - score, "comment", comment))))
+                .andExpect(status().isOk());
+        mvc.perform(get("/members/1/ratings"))
+                .andExpect(jsonPath("$.result[0].score").value(6 - score))
+                .andExpect(jsonPath("$.result[0].comment").value(comment));
+    }
+
+    @Test void omittedCommentOnUpdateClearsTheExistingComment() throws Exception {
+        mvc.perform(patch("/members/1/ratings/1").contentType(MediaType.APPLICATION_JSON).content("{\"score\":4}"))
+                .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT comment FROM rating WHERE rating_id=1", String.class)).isNull();
+        mvc.perform(get("/members/1/ratings"))
+                .andExpect(jsonPath("$.result[1].comment").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test void missingAndEmptyMembersHaveDifferentResponses() throws Exception {
+        mvc.perform(get("/members/999/ratings")).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("COMMON404")).andExpect(jsonPath("$.isSuccess").value(false));
+        mvc.perform(get("/members/3/ratings")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("COMMON200")).andExpect(jsonPath("$.result").isEmpty());
+    }
+
+    @Test void anotherMemberCanRateTheSameMovie() throws Exception {
+        mvc.perform(post("/members/3/ratings").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"movieId\":550,\"score\":5}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.isSuccess").value(true));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating WHERE movie_id=550", Integer.class)).isEqualTo(3);
+    }
 }
