@@ -2,6 +2,7 @@ package com.umc.movie.controller;
 
 import com.umc.movie.dto.ApiResponse;
 import com.umc.movie.exception.ConflictException;
+import com.umc.movie.exception.IntegrityViolationClassifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,7 +33,10 @@ public class GlobalExceptionHandler {
     // 사전 중복 확인을 동시에 통과해도 DB UNIQUE 제약이 마지막으로 저장을 막습니다.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> integrity(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(409).body(ApiResponse.failure("COMMON4091", "중복 데이터 또는 참조 관계로 인해 저장할 수 없습니다."));
+        if (IntegrityViolationClassifier.isUniqueViolation(ex)) {
+            return ResponseEntity.status(409).body(ApiResponse.failure("COMMON4091", "이미 존재하는 데이터입니다."));
+        }
+        return ResponseEntity.badRequest().body(ApiResponse.failure("COMMON4003", "데이터 형식 또는 참조 관계를 확인해주세요."));
     }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> notFound(ResourceNotFoundException ex) {
