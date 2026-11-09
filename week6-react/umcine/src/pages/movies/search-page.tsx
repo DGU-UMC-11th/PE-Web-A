@@ -53,7 +53,7 @@ function SearchContent({ query }: { query: string }) {
   return <main className="mx-auto w-full max-w-[1344px] flex-1 px-8 pb-12 pt-7">
     <div className={cn(!normalized && 'mx-auto max-w-[800px] pt-32')}>
       <h1 className={cn('mb-5 font-bold tracking-tight', normalized ? 'text-[32px]' : 'text-center text-3xl')}>{normalized ? '영화 검색' : '어떤 영화를 찾고 있나요?'}</h1>
-      <SearchForm key={query ?? ''} query={query ?? ''} onRetry={retrySearch} />
+      <SearchForm key={query} query={query} onRetry={retrySearch} />
       {!normalized && <p className="mt-4 text-center text-sm text-gray-500">검색어를 입력해 주세요.</p>}
     </div>
     {normalized && <section className="mt-6" aria-live="polite">
