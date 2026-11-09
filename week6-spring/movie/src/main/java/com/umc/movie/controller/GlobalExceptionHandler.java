@@ -2,6 +2,7 @@ package com.umc.movie.controller;
 
 import com.umc.movie.dto.ApiResponse;
 import com.umc.movie.exception.ConflictException;
+import com.umc.movie.exception.InvalidPasswordException;
 import com.umc.movie.exception.IntegrityViolationClassifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> invalidFormat(Exception ex) {
         return ResponseEntity.badRequest().body(ApiResponse.failure("COMMON4002", "JSON 형식과 필드 타입을 확인해주세요."));
+    }
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ApiResponse<Void>> passwordPolicy(InvalidPasswordException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.failure("COMMON4001", ex.getMessage()));
     }
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiResponse<Void>> conflict(ConflictException ex) {
