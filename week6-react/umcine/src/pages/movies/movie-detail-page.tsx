@@ -21,7 +21,6 @@ function MovieDetailContent({ movieId }: { movieId: number }) {
   const movieQuery = useQuery({
     queryKey: ['movies', 'detail', movieId],
     queryFn: ({ signal }) => getMovieDetail(movieId, signal),
-    enabled: Number.isSafeInteger(movieId) && movieId > 0,
     staleTime: 30_000,
   });
   if (movieQuery.isPending) return <main className="flex-1 px-8 py-20 text-center"><p role="status">{movieQuery.isPaused ? '인터넷 연결을 기다리고 있어요.' : '영화 정보를 불러오는 중이에요.'}</p></main>;
