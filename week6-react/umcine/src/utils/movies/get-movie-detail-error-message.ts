@@ -1,7 +1,7 @@
 import { isHTTPError } from 'ky';
-import { env } from '../../config/env';
+import { TmdbEnvError } from '../../config/env';
 export function getMovieErrorMessage(error: unknown, fallback: string) {
-  if (!env.tmdbAccessToken || !env.tmdbApiBaseUrl) return 'TMDB 환경 변수가 필요해요. .env.local 설정 후 개발 서버를 다시 시작해 주세요.';
+  if (error instanceof TmdbEnvError) return 'TMDB 환경 변수가 필요해요. .env.local 설정 후 개발 서버를 다시 시작해 주세요.';
   if (isHTTPError(error) && error.response.status === 401) return 'TMDB 인증에 실패했어요. API Read Access Token을 확인해 주세요.';
   return fallback;
 }
