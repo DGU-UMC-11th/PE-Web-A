@@ -14,6 +14,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.any;
+import com.umc.movie.entity.Member;
+import com.umc.movie.entity.Rating;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,5 +56,32 @@ class DatabaseConstraintApiTest {
                 .content("{\"movieId\":550,\"score\":4}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("RATING4091"));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating WHERE member_id=1 AND movie_id=550", Integer.class)).isEqualTo(1);
+    }
+
+    @Test void foreignKeyViolationIsNotReportedAsDuplicate() throws Exception {
+        doAnswer(invocation -> {
+            jdbc.update("INSERT INTO rating(member_id,movie_id,score) VALUES (999,27205,4)");
+            return null;
+        }).when(ratings).saveAndFlush(any(Rating.class));
+        mvc.perform(post("/members/1/ratings").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"movieId\":27205,\"score\":4}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("COMMON4003"))
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.result").value(org.hamcrest.Matchers.nullValue()));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating", Integer.class)).isEqualTo(3);
+    }
+
+    @Test void columnLengthViolationIsNotReportedAsDuplicate() throws Exception {
+        doAnswer(invocation -> {
+            jdbc.update("INSERT INTO member(email,password,nickname) VALUES (?,?,?)",
+                    "too-long@umc.com", "x".repeat(61), "새회원");
+            return null;
+        }).when(members).saveAndFlush(any(Member.class));
+        mvc.perform(post("/members").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"new@umc.com\",\"password\":\"Umc!1234\",\"nickname\":\"새회원\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("COMMON4003"))
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.result").value(org.hamcrest.Matchers.nullValue()));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM member", Integer.class)).isEqualTo(3);
     }
 }
