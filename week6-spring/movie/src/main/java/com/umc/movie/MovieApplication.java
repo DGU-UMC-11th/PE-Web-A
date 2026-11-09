@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class MovieApplication {
+    /** Spring Boot 애플리케이션을 시작한다. */
     public static void main(String[] args) {
         SpringApplication.run(MovieApplication.class, args);
     }

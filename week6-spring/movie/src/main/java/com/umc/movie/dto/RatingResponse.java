@@ -12,6 +12,7 @@ public record RatingResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+    /** 평점 엔티티에서 공개할 필드만 응답 DTO로 옮긴다. */
     public static RatingResponse from(Rating rating) {
         return new RatingResponse(
                 rating.getRatingId(),

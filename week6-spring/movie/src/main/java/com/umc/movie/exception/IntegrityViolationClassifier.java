@@ -8,6 +8,7 @@ public final class IntegrityViolationClassifier {
     private static final Pattern RATING_UNIQUE = Pattern.compile(
             "(?i)(?<![a-z0-9_])uk_rating_member_movie(?:_index_[a-z0-9]+)?(?![a-z0-9_])");
 
+    /** 정적 판별 함수만 사용하도록 인스턴스 생성을 막는다. */
     private IntegrityViolationClassifier() {}
 
     /** 중복 키 오류 중 회원·영화 복합 UNIQUE 제약에 해당하는 경우만 판별한다. */

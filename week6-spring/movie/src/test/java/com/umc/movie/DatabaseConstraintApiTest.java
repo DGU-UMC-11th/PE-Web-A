@@ -33,6 +33,7 @@ class DatabaseConstraintApiTest {
 
     // 중복 검사 직후 다른 요청이 저장한 경우처럼, 사전 검사만 통과시킵니다.
     // saveAndFlush와 DB UNIQUE 제약은 실제 실행합니다.
+    /** 사전 검사를 통과한 중복 이메일을 실제 DB 제약이 막는지 검증한다. */
     @Test void databaseRejectsDuplicateEmailAfterPrecheck() throws Exception {
         doReturn(false).when(members).existsByEmail("noco@umc.com");
         mvc.perform(post("/members").contentType(MediaType.APPLICATION_JSON)
@@ -42,6 +43,7 @@ class DatabaseConstraintApiTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM member", Integer.class)).isEqualTo(3);
     }
 
+    /** 사전 검사를 통과한 중복 닉네임을 실제 DB 제약이 막는지 검증한다. */
     @Test void databaseRejectsDuplicateNicknameAfterPrecheck() throws Exception {
         doReturn(false).when(members).existsByNickname("수현");
         mvc.perform(post("/members").contentType(MediaType.APPLICATION_JSON)
@@ -50,6 +52,7 @@ class DatabaseConstraintApiTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM member", Integer.class)).isEqualTo(3);
     }
 
+    /** 실제 복합 UNIQUE 위반이 전용 평점 충돌 코드로 변환되고 롤백되는지 검증한다. */
     @Test void databaseRejectsDuplicateRatingAfterPrecheck() throws Exception {
         doReturn(false).when(ratings).existsByMember_MemberIdAndMovieId(1L, 550L);
         mvc.perform(post("/members/1/ratings").contentType(MediaType.APPLICATION_JSON)
@@ -58,6 +61,7 @@ class DatabaseConstraintApiTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating WHERE member_id=1 AND movie_id=550", Integer.class)).isEqualTo(1);
     }
 
+    /** 실제 외래 키 위반이 중복 오류가 아닌 무결성 오류로 응답되는지 검증한다. */
     @Test void foreignKeyViolationIsNotReportedAsDuplicate() throws Exception {
         doAnswer(invocation -> {
             jdbc.update("INSERT INTO rating(member_id,movie_id,score) VALUES (999,27205,4)");
@@ -71,6 +75,7 @@ class DatabaseConstraintApiTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating", Integer.class)).isEqualTo(3);
     }
 
+    /** 실제 컬럼 길이 초과가 중복 오류가 아닌 무결성 오류로 응답되는지 검증한다. */
     @Test void columnLengthViolationIsNotReportedAsDuplicate() throws Exception {
         doAnswer(invocation -> {
             jdbc.update("INSERT INTO member(email,password,nickname) VALUES (?,?,?)",

@@ -24,6 +24,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /** 비밀번호 정책과 중복을 확인한 뒤 해시된 비밀번호로 회원을 저장한다. */
     @Transactional
     public MemberResponse signUp(SignUpRequest request) {
         validatePassword(request.password());
@@ -38,6 +39,7 @@ public class MemberService {
         return new MemberResponse(saved.getMemberId(), saved.getEmail(), saved.getNickname());
     }
 
+    /** 비밀번호 문자 구성과 bcrypt의 UTF-8 72바이트 입력 한도를 검증한다. */
     private void validatePassword(String password) {
         if (password == null || !PASSWORD_POLICY.matcher(password).matches()) {
             throw new InvalidPasswordException("비밀번호는 대문자/소문자/숫자/특수문자(!@#$%^&*)를 포함한 8자 이상이어야 합니다.");
@@ -47,12 +49,14 @@ public class MemberService {
         }
     }
 
+    /** 닉네임의 사용 가능 여부를 반환한다. */
     @Transactional(readOnly = true)
     public NicknameCheckResponse checkNickname(String nickname) {
         boolean exists = memberRepository.existsByNickname(nickname);
         return new NicknameCheckResponse(!exists);
     }
 
+    /** 이메일의 사용 가능 여부를 반환한다. */
     @Transactional(readOnly = true)
     public EmailCheckResponse checkEmail(String email) {
         boolean exists = memberRepository.existsByEmail(email);

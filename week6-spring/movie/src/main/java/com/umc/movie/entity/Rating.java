@@ -29,6 +29,7 @@ public class Rating extends BaseTimeEntity {
 
     @Column(columnDefinition = "TEXT")
     private String comment;
+    /** 회원과 TMDB 영화 ID를 연결한 새 평점을 생성한다. */
     public Rating(Member member, Long movieId, Integer score, String comment) {
         this.member = member;
         this.movieId = movieId;
@@ -36,6 +37,7 @@ public class Rating extends BaseTimeEntity {
         this.comment = comment;
     }
 
+    /** 별점과 후기를 교체하며 null 후기는 기존 후기를 지운다. */
     public void update(Integer score, String comment) {
         this.score = score;
         this.comment = comment;

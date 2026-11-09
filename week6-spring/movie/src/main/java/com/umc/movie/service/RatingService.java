@@ -25,6 +25,7 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final MemberRepository memberRepository;
 
+    /** 회원 존재 여부를 확인하고 최신 등록순 평점 DTO 목록을 반환한다. */
     @Transactional(readOnly = true)
     public List<RatingResponse> getRatingsByMember(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
@@ -36,6 +37,7 @@ public class RatingService {
                 .toList();
     }
 
+    /** 회원과 중복 평점을 확인하고 저장한 평점 ID를 반환한다. */
     @Transactional
     public Long create(Long memberId, CreateRatingRequest request) {
         Member member = memberRepository.findById(memberId)
@@ -54,17 +56,20 @@ public class RatingService {
         }
     }
 
+    /** 별점과 후기를 교체하며 null 후기는 기존 후기를 지운다. */
     @Transactional
     public void update(Long ratingId, Long memberId, UpdateRatingRequest request) {
         Rating rating = findOwnedRating(ratingId, memberId);
         rating.update(request.score(), request.comment());
     }
 
+    /** 평점 존재 여부와 소유권을 확인한 뒤 삭제한다. */
     @Transactional
     public void delete(Long ratingId, Long memberId) {
         ratingRepository.delete(findOwnedRating(ratingId, memberId));
     }
 
+    /** 평점이 없으면 조회 실패, 소유자가 다르면 권한 오류를 발생시킨다. */
     private Rating findOwnedRating(Long ratingId, Long memberId) {
         Rating rating = ratingRepository.findById(ratingId)
                 .orElseThrow(() -> new ResourceNotFoundException( "존재하지 않는 평점입니다."));
