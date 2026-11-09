@@ -9,7 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.server.ResponseStatusException;
+import com.umc.movie.exception.ResourceNotFoundException;
+import com.umc.movie.exception.RatingOwnershipException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,9 +34,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> integrity(DataIntegrityViolationException ex) {
         return ResponseEntity.status(409).body(ApiResponse.failure("COMMON4091", "중복 데이터 또는 참조 관계로 인해 저장할 수 없습니다."));
     }
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiResponse<Void>> status(ResponseStatusException ex) {
-        return ResponseEntity.status(ex.getStatusCode())
-                .body(ApiResponse.failure("COMMON" + ex.getStatusCode().value(), ex.getReason()));
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> notFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(404).body(ApiResponse.failure("COMMON404", ex.getMessage()));
+    }
+    @ExceptionHandler(RatingOwnershipException.class)
+    public ResponseEntity<ApiResponse<Void>> forbidden(RatingOwnershipException ex) {
+        return ResponseEntity.status(403).body(ApiResponse.failure("COMMON403", ex.getMessage()));
     }
 }

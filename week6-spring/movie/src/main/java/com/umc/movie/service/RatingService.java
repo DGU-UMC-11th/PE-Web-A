@@ -9,10 +9,10 @@ import com.umc.movie.exception.ConflictException;
 import com.umc.movie.repository.RatingRepository;
 import com.umc.movie.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import com.umc.movie.exception.ResourceNotFoundException;
+import com.umc.movie.exception.RatingOwnershipException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class RatingService {
     @Transactional(readOnly = true)
     public List<RatingResponse> getRatingsByMember(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다.");
+            throw new ResourceNotFoundException( "존재하지 않는 유저입니다.");
         }
 
         return ratingRepository.findByMember_MemberIdOrderByRatingIdDesc(memberId).stream()
@@ -37,7 +37,7 @@ public class RatingService {
     @Transactional
     public Long create(Long memberId, CreateRatingRequest request) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException( "존재하지 않는 유저입니다."));
         if (ratingRepository.existsByMember_MemberIdAndMovieId(memberId, request.movieId())) {
             throw new ConflictException("RATING4091", "이미 이 영화에 평점을 남기셨습니다.");
         }
@@ -57,9 +57,9 @@ public class RatingService {
 
     private Rating findOwnedRating(Long ratingId, Long memberId) {
         Rating rating = ratingRepository.findById(ratingId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 평점입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException( "존재하지 않는 평점입니다."));
         if (!rating.getMember().getMemberId().equals(memberId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 평점만 수정하거나 삭제할 수 있습니다.");
+            throw new RatingOwnershipException( "본인이 작성한 평점만 수정하거나 삭제할 수 있습니다.");
         }
         return rating;
     }
