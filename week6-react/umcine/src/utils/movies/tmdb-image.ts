@@ -5,5 +5,8 @@ export function getTmdbBackdropUrl(path: string | null) {
   return path ? `https://image.tmdb.org/t/p/w1280${path}` : null;
 }
 export function formatRuntime(runtime: number | null) {
-  return runtime === null ? '상영 시간 정보가 없어요.' : `${Math.floor(runtime / 60)}시간 ${runtime % 60}분`;
+  if (runtime === null || runtime <= 0) return '상영 시간 정보가 없어요.';
+  const hours = Math.floor(runtime / 60);
+  const minutes = runtime % 60;
+  return hours === 0 ? `${minutes}분` : `${hours}시간 ${minutes}분`;
 }
