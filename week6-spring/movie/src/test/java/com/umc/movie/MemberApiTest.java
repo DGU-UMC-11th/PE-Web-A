@@ -1,6 +1,8 @@
 package com.umc.movie;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,5 +59,15 @@ class MemberApiTest {
     @Test void otherOriginIsRejected() throws Exception {
         mvc.perform(get("/members/1/ratings").header("Origin", "http://untrusted.example"))
             .andExpect(status().isForbidden()).andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PATCH", "DELETE"})
+    void writePreflightMethodsAreAllowed(String method) throws Exception {
+        mvc.perform(options("/members/1/ratings/1").header("Origin", "http://localhost:5173")
+                .header("Access-Control-Request-Method", method))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString(method)));
     }
 }
