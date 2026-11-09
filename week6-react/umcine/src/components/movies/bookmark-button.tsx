@@ -10,7 +10,7 @@ export function BookmarkButton({ movieId, title, compact = false }: {
   const isBookmarked = useBookmarkStore(state => state.bookmarkedMovieIds.includes(movieId));
   const toggleBookmark = useBookmarkStore(state => state.toggleBookmark);
   return (
-    <button type="button" aria-label={`${title} 북마크 ${isBookmarked ? '해제' : '추가'}`}
+    <button type="button" aria-label={`${title} 북마크`}
       aria-pressed={isBookmarked} onClick={() => toggleBookmark(movieId)}
       className={cn('flex items-center justify-center gap-2 border text-sm font-extrabold text-white',
         compact ? 'absolute right-2.5 top-2.5 size-[34px] rounded-md hover:ring-2 hover:ring-white/70' : 'h-[42px] rounded-lg px-4',
