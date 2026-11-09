@@ -50,7 +50,7 @@ class DatabaseConstraintApiTest {
         doReturn(false).when(ratings).existsByMember_MemberIdAndMovieId(1L, 550L);
         mvc.perform(post("/members/1/ratings").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"movieId\":550,\"score\":4}"))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("COMMON4091"));
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("RATING4091"));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating WHERE member_id=1 AND movie_id=550", Integer.class)).isEqualTo(1);
     }
 }

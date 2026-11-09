@@ -6,6 +6,8 @@ import com.umc.movie.dto.UpdateRatingRequest;
 import com.umc.movie.entity.Member;
 import com.umc.movie.entity.Rating;
 import com.umc.movie.exception.ConflictException;
+import com.umc.movie.exception.IntegrityViolationClassifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.umc.movie.repository.RatingRepository;
 import com.umc.movie.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +43,15 @@ public class RatingService {
         if (ratingRepository.existsByMember_MemberIdAndMovieId(memberId, request.movieId())) {
             throw new ConflictException("RATING4091", "이미 이 영화에 평점을 남기셨습니다.");
         }
-        return ratingRepository.saveAndFlush(new Rating(member, request.movieId(), request.score(), request.comment())).getRatingId();
+        try {
+            return ratingRepository.saveAndFlush(new Rating(member, request.movieId(), request.score(), request.comment())).getRatingId();
+        } catch (DataIntegrityViolationException ex) {
+            // 실패한 트랜잭션에서 추가 DB 작업 없이 런타임 예외를 다시 던져 롤백한다.
+            if (IntegrityViolationClassifier.isDuplicateRating(ex)) {
+                throw new ConflictException("RATING4091", "이미 이 영화에 평점을 남기셨습니다.", ex);
+            }
+            throw ex;
+        }
     }
 
     @Transactional
