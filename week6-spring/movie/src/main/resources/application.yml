@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/umc_movie}
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:}
   jackson:
     deserialization:
       accept-float-as-int: false
