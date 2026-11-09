@@ -6,6 +6,7 @@ import { getTmdbPosterUrl, getTmdbBackdropUrl, formatRuntime } from '../../utils
 import { MovieImage } from '../../components/movies/movie-image';
 import { BookmarkButton } from '../../components/movies/bookmark-button';
 
+/** URL의 영화 ID를 검증한 뒤 유효한 ID에 대해서만 상세 화면을 연다. */
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: '/movies/$movieId' });
   const parsedId = /^\d+$/.test(movieId) ? Number(movieId) : NaN;
@@ -13,10 +14,12 @@ export function MovieDetailPage() {
   return <MovieDetailContent key={parsedId} movieId={parsedId} />;
 }
 
+/** 상세 조회 안내 메시지와 목록으로 돌아가는 링크를 표시한다. */
 function DetailMessage({ message }: { message: string }) {
   return <main className="mx-auto w-full max-w-[1344px] flex-1 px-8 py-20"><h1 className="mb-6 text-2xl font-bold">{message}</h1><Link to="/" className="text-[#4164ed]">영화 목록으로 돌아가기</Link></main>;
 }
 
+/** 검증된 영화 ID의 상세 데이터를 조회하고 영화 정보와 북마크를 표시한다. */
 function MovieDetailContent({ movieId }: { movieId: number }) {
   const movieQuery = useQuery({
     queryKey: ['movies', 'detail', movieId],

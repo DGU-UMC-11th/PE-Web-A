@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../utils/cn';
+/** 이미지 경로가 없거나 로드에 실패하면 대체 안내를 표시한다. */
 export function MovieImage({ src, alt, className }: { src: string | null; alt: string; className: string }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   return src && failedSrc !== src

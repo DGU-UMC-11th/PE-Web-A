@@ -6,6 +6,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+/** 현재 페이지 주변의 최대 다섯 페이지와 이전·다음 이동 버튼을 표시한다. */
 export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   if (totalPages < 1) return null;
   const start = Math.max(1, Math.min(page - 2, totalPages - 4));

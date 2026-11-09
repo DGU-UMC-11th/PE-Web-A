@@ -29,11 +29,13 @@ function SearchForm({ query, onRetry }: { query: string; onRetry: () => void }) 
   </form>;
 }
 
+/** URL 검색어를 읽고 검색어가 바뀌면 검색 화면을 새로 구성한다. */
 export function SearchPage() {
   const { query = '' } = useSearch({ from: '/search' });
   return <SearchContent key={query} query={query} />;
 }
 
+/** 비어 있지 않은 검색어로 조회하고 로딩, 오류, 빈 결과를 구분해 표시한다. */
 function SearchContent({ query }: { query: string }) {
   const normalized = query.trim();
   const searchQuery = useQuery({
@@ -47,6 +49,7 @@ function SearchContent({ query }: { query: string }) {
   const errorMessage = searchQuery.isError
     ? getMovieErrorMessage(searchQuery.error, '검색 결과를 불러오지 못했어요.')
     : null;
+  /** 검색어가 있고 진행 중인 요청이 없을 때 같은 검색어로 다시 조회한다. */
   function retrySearch() {
     if (normalized && !searchQuery.isFetching) void searchQuery.refetch();
   }

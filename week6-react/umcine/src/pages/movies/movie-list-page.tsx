@@ -5,6 +5,7 @@ import { Pagination } from '../../components/movies/pagination';
 import { getMovies } from '../../api/movies/get-movies';
 import { getMovieErrorMessage } from '../../utils/movies/get-movie-detail-error-message';
 
+/** 페이지별 영화 조회 상태와 목록, 페이지 이동 버튼을 표시한다. */
 export function MovieListPage() {
   const [page, setPage] = useState(1);
   const moviesQuery = useQuery({
