@@ -20,8 +20,8 @@ public class RatingController {
     private final RatingService ratingService;
 
     @GetMapping("/{memberId}/ratings")
-    public List<RatingResponse> getMemberRatings(@PathVariable Long memberId) {
-        return ratingService.getRatingsByMember(memberId);
+    public ApiResponse<List<RatingResponse>> getMemberRatings(@PathVariable Long memberId) {
+        return ApiResponse.ok("회원 평점을 조회했습니다.", ratingService.getRatingsByMember(memberId));
     }
 
     @PostMapping("/{memberId}/ratings")

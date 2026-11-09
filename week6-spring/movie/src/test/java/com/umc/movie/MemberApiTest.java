@@ -27,19 +27,19 @@ class MemberApiTest {
     }
     @Test void ratingsAreFilteredSortedAndMappedToDto() throws Exception {
         mvc.perform(get("/members/1/ratings")).andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].ratingId").value(2))
-            .andExpect(jsonPath("$[0].movieId").value(155))
-            .andExpect(jsonPath("$[0].score").value(4))
-            .andExpect(jsonPath("$[0].comment").value("다시 봐도 명작"))
-            .andExpect(jsonPath("$[0].createdAt").exists())
-            .andExpect(jsonPath("$[0].updatedAt").exists())
-            .andExpect(jsonPath("$[0].member").doesNotExist())
-            .andExpect(jsonPath("$[0].password").doesNotExist())
-            .andExpect(jsonPath("$[1].ratingId").value(1));
+            .andExpect(jsonPath("$.result.length()").value(2))
+            .andExpect(jsonPath("$.result[0].ratingId").value(2))
+            .andExpect(jsonPath("$.result[0].movieId").value(155))
+            .andExpect(jsonPath("$.result[0].score").value(4))
+            .andExpect(jsonPath("$.result[0].comment").value("다시 봐도 명작"))
+            .andExpect(jsonPath("$.result[0].createdAt").exists())
+            .andExpect(jsonPath("$.result[0].updatedAt").exists())
+            .andExpect(jsonPath("$.result[0].member").doesNotExist())
+            .andExpect(jsonPath("$.result[0].password").doesNotExist())
+            .andExpect(jsonPath("$.result[1].ratingId").value(1));
     }
     @Test void existingMemberWithoutRatingsReturnsEmptyArray() throws Exception {
-        mvc.perform(get("/members/3/ratings")).andExpect(status().isOk()).andExpect(content().json("[]"));
+        mvc.perform(get("/members/3/ratings")).andExpect(status().isOk()).andExpect(jsonPath("$.result").isEmpty());
     }
     @Test void missingMemberReturns404() throws Exception {
         mvc.perform(get("/members/999/ratings")).andExpect(status().isNotFound());

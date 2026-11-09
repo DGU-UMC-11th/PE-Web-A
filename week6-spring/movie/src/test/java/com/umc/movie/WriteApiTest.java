@@ -78,11 +78,11 @@ class WriteApiTest {
         mvc.perform(patch("/members/1/ratings/{id}", id).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"score\":3,\"comment\":\"수정 후기\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("COMMON200"));
-        mvc.perform(get("/members/1/ratings")).andExpect(jsonPath("$[0].ratingId").value(id))
-                .andExpect(jsonPath("$[0].score").value(3)).andExpect(jsonPath("$[0].comment").value("수정 후기"));
+        mvc.perform(get("/members/1/ratings")).andExpect(jsonPath("$.result[0].ratingId").value(id))
+                .andExpect(jsonPath("$.result[0].score").value(3)).andExpect(jsonPath("$.result[0].comment").value("수정 후기"));
         mvc.perform(delete("/members/1/ratings/{id}", id)).andExpect(status().isNoContent()).andExpect(content().string(""));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM rating WHERE rating_id = ?", Integer.class, id)).isZero();
-        mvc.perform(get("/members/1/ratings")).andExpect(jsonPath("$.length()").value(2));
+        mvc.perform(get("/members/1/ratings")).andExpect(jsonPath("$.result.length()").value(2));
     }
 
     @Test void duplicateRatingAndMissingMember() throws Exception {
