@@ -18,12 +18,12 @@ class MemberApiTest {
     @Autowired MockMvc mvc;
 
     @Test void nicknameAvailability() throws Exception {
-        mvc.perform(get("/members/nickname/{nickname}", "수현")).andExpect(status().isOk()).andExpect(jsonPath("$.available").value(false));
-        mvc.perform(get("/members/nickname/{nickname}", "새회원")).andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+        mvc.perform(get("/members/nickname/{nickname}", "수현")).andExpect(status().isOk()).andExpect(jsonPath("$.result.available").value(false));
+        mvc.perform(get("/members/nickname/{nickname}", "새회원")).andExpect(status().isOk()).andExpect(jsonPath("$.result.available").value(true));
     }
     @Test void emailAvailability() throws Exception {
-        mvc.perform(get("/members/email/noco@umc.com")).andExpect(status().isOk()).andExpect(jsonPath("$.available").value(false));
-        mvc.perform(get("/members/email/new@umc.com")).andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+        mvc.perform(get("/members/email/noco@umc.com")).andExpect(status().isOk()).andExpect(jsonPath("$.result.available").value(false));
+        mvc.perform(get("/members/email/new@umc.com")).andExpect(status().isOk()).andExpect(jsonPath("$.result.available").value(true));
     }
     @Test void ratingsAreFilteredSortedAndMappedToDto() throws Exception {
         mvc.perform(get("/members/1/ratings")).andExpect(status().isOk())

@@ -19,13 +19,13 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/nickname/{nickname}")
-    public NicknameCheckResponse checkNickname(@PathVariable String nickname) {
-        return memberService.checkNickname(nickname);
+    public ApiResponse<NicknameCheckResponse> checkNickname(@PathVariable String nickname) {
+        return ApiResponse.ok("닉네임 사용 가능 여부를 확인했습니다.", memberService.checkNickname(nickname));
     }
 
     @GetMapping("/email/{email}")
-    public EmailCheckResponse checkEmail(@PathVariable String email) {
-        return memberService.checkEmail(email);
+    public ApiResponse<EmailCheckResponse> checkEmail(@PathVariable String email) {
+        return ApiResponse.ok("이메일 사용 가능 여부를 확인했습니다.", memberService.checkEmail(email));
     }
 
     @PostMapping
