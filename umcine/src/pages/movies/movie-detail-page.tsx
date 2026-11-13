@@ -1,35 +1,105 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { getMovieDetail } from "../../api/movies/get-movie-detail";
+import type { TmdbMovieDetail } from "../../api/movies/models";
 import { Icon } from "../../components/common/icon";
-import { movies } from "../../data/movies";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
+import { formatRuntime } from "../../utils/movies/format-runtime";
+import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
+import {
+  getTmdbBackdropUrl,
+  getTmdbPosterUrl,
+} from "../../utils/movies/tmdb-image";
 
 const ratingScores = [1, 2, 3, 4, 5];
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
-  const movie = movies.find((item) => item.id === Number(movieId));
+  const parsedMovieId = Number(movieId);
+  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
+
+  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(isValidMovieId);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [prevMovieId, setPrevMovieId] = useState(parsedMovieId);
+
+  // 영화 ID가 바뀌면 이전 상세 정보를 지우고 새 요청의 로딩을 시작한다.
+  if (parsedMovieId !== prevMovieId) {
+    setPrevMovieId(parsedMovieId);
+    setMovie(null);
+    setErrorMessage(null);
+    setIsLoading(isValidMovieId);
+  }
 
   const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(Number(movieId)),
+    state.bookmarkedMovieIds.includes(parsedMovieId),
   );
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
-  if (!movie) {
+  useEffect(() => {
+    if (!isValidMovieId) return;
+
+    let ignore = false;
+
+    getMovieDetail(parsedMovieId)
+      .then((response) => {
+        if (!ignore) setMovie(response);
+      })
+      .catch((error: unknown) => {
+        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [isValidMovieId, parsedMovieId]);
+
+  if (!isValidMovieId) {
     return (
       <main className="mx-auto w-full max-w-[1440px] px-4 py-6 text-muted lg:px-20">
-        영화를 찾을 수 없어요.
+        올바르지 않은 영화 번호예요.
       </main>
     );
   }
 
+  if (isLoading) {
+    return (
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-6 text-muted lg:px-20">
+        영화 정보를 불러오는 중이에요.
+      </main>
+    );
+  }
+
+  if (errorMessage || !movie) {
+    return (
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-6 text-muted lg:px-20">
+        {errorMessage ?? "영화 정보를 불러오지 못했어요."}
+      </main>
+    );
+  }
+
+  const posterUrl = getTmdbPosterUrl(movie.poster_path);
+  const backdropUrl = getTmdbBackdropUrl(movie.backdrop_path);
+
   return (
     <main>
       <section
-        className="relative h-[300px] w-full bg-cover bg-center sm:h-[360px]"
-        style={{ backgroundImage: `url(${movie.backdropPath})` }}
+        className={cn(
+          "relative h-[300px] w-full bg-cover bg-center sm:h-[360px]",
+          !backdropUrl && "bg-muted",
+        )}
+        style={backdropUrl ? { backgroundImage: `url(${backdropUrl})` } : undefined}
       >
         <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+        {!backdropUrl && (
+          <span className="absolute inset-0 flex items-center justify-center text-xs text-white/80">
+            이미지 없음
+          </span>
+        )}
         <div className="relative mx-auto flex h-full max-w-[1440px] flex-col justify-between px-4 py-6 lg:px-20">
           <Link
             to="/"
@@ -41,22 +111,28 @@ export function MovieDetailPage() {
 
           <div className="flex w-[800px] max-w-full flex-col gap-2">
             <h1 className="text-[30px]/[36px] font-bold tracking-[-1.2px] break-keep text-white sm:text-[46px]/[50px] sm:tracking-[-2.3px]">{movie.title}</h1>
-            <p className="text-sm/[17px] text-white">{movie.originalTitle}</p>
+            <p className="text-sm/[17px] text-white">{movie.original_title}</p>
             <p className="flex flex-wrap gap-2 text-[13px]/4 font-bold text-white">
-              <span>{movie.releaseDate}</span>
-              <span>{movie.genres.join(" · ")}</span>
-              <span>{movie.runtime}</span>
+              <span>{movie.release_date}</span>
+              <span>{movie.genres.map((genre) => genre.name).join(" · ")}</span>
+              <span>{formatRuntime(movie.runtime)}</span>
             </p>
           </div>
         </div>
       </section>
 
       <div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-4 py-6 lg:flex-row lg:items-start lg:px-20">
-        <img
-          src={movie.posterPath}
-          alt={`${movie.title} 포스터`}
-          className="h-[286px] w-[200px] shrink-0 rounded-[10px] object-cover shadow-[0_12px_30px_rgba(12,15,20,0.12)]"
-        />
+        {posterUrl ? (
+          <img
+            src={posterUrl}
+            alt={`${movie.title} 포스터`}
+            className="h-[286px] w-[200px] shrink-0 rounded-[10px] object-cover shadow-[0_12px_30px_rgba(12,15,20,0.12)]"
+          />
+        ) : (
+          <div className="flex h-[286px] w-[200px] shrink-0 items-center justify-center rounded-[10px] bg-line text-xs text-muted shadow-[0_12px_30px_rgba(12,15,20,0.12)]">
+            이미지 없음
+          </div>
+        )}
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <h2 className="text-[21px]/[25px] font-bold tracking-[-0.63px] break-keep text-ink">{movie.tagline}</h2>
