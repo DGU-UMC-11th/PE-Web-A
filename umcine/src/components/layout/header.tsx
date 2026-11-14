@@ -14,6 +14,8 @@ export function Header() {
   const isMoviesActive =
     Boolean(matchRoute({ to: "/" })) || Boolean(matchRoute({ to: "/movies/$movieId" }));
   const isSearchActive = Boolean(matchRoute({ to: "/search" }));
+  // /my와 그 하위 경로(/my/edit)에서 활성
+  const isMyActive = Boolean(matchRoute({ to: "/my", fuzzy: true }));
 
   return (
     <header className="w-full border-b border-line bg-white">
@@ -46,13 +48,15 @@ export function Header() {
             >
               검색
             </Link>
-            {/* /my 경로가 아직 없어 비활성 메뉴로 둔다. */}
-            <span
-              aria-disabled="true"
-              className={cn(navItemClassName, inactiveNavItemClassName, "cursor-not-allowed")}
+            <Link
+              to="/my"
+              className={cn(
+                navItemClassName,
+                isMyActive ? activeNavItemClassName : inactiveNavItemClassName,
+              )}
             >
               내 정보
-            </span>
+            </Link>
           </nav>
         </div>
 
@@ -64,12 +68,12 @@ export function Header() {
           >
             <Icon name="search" className="size-6 text-muted" />
           </Link>
-          <button
-            type="button"
-            className="h-[42px] min-w-[71px] shrink-0 cursor-pointer rounded-lg border border-white bg-brand px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white"
+          <Link
+            to="/login"
+            className="inline-flex h-[42px] min-w-[71px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white bg-brand px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white"
           >
             로그인
-          </button>
+          </Link>
         </div>
       </div>
     </header>

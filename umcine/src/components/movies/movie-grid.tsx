@@ -1,8 +1,7 @@
-import type { TmdbMovieListItem } from "../../api/movies/models";
-import MovieCard from "./movie-card";
+import MovieCard, { type MovieCardItem } from "./movie-card";
 
 interface MovieGridProps {
-  movies: TmdbMovieListItem[];
+  movies: MovieCardItem[];
 }
 
 /**

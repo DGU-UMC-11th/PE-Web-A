@@ -1,5 +1,6 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState, type SubmitEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { Icon } from "../../components/common/icon";
@@ -85,49 +86,25 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
 export function SearchPage() {
   const { query } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
-  const requestQuery = query?.trim() ?? "";
-  const hasQuery = requestQuery !== "";
+  const normalizedQuery = query?.trim() ?? "";
+  const hasQuery = normalizedQuery.length > 0;
 
   const [searchText, setSearchText] = useState(query ?? "");
   const [prevQuery, setPrevQuery] = useState(query);
-  const [searchResults, setSearchResults] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(hasQuery);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // URL의 query가 바뀌면 입력창을 그 값으로 맞추고, 새 검색의 로딩을 시작한다.
+  // URL의 query가 바뀌면 입력창을 그 값으로 맞춘다.
   if (query !== prevQuery) {
     setPrevQuery(query);
     setSearchText(query ?? "");
-    setIsLoading(Boolean(query?.trim()));
-    setErrorMessage(null);
   }
 
-  useEffect(() => {
-    if (!requestQuery) return;
+  const { data, isLoading, isError, isSuccess } = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery }],
+    queryFn: () => searchMovies({ query: normalizedQuery }),
+    enabled: hasQuery,
+  });
 
-    let ignore = false;
-
-    searchMovies({ query: requestQuery })
-      .then((response) => {
-        if (!ignore) {
-          setSearchResults(response.results);
-          setErrorMessage(null);
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setSearchResults([]);
-          setErrorMessage("검색 결과를 불러오지 못했어요.");
-        }
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [requestQuery]);
+  const searchResults = data?.results ?? [];
 
   // lg 이상 2열 그리드의 마지막 행이 시작하는 index (마지막 행은 아래 구분선을 그리지 않는다)
   const lastRowStartIndex = searchResults.length - (searchResults.length % 2 || 2);
@@ -217,9 +194,9 @@ export function SearchPage() {
 
       {isLoading ? (
         <p className="py-10 text-center text-sm text-subtle">검색 결과를 불러오는 중이에요.</p>
-      ) : errorMessage ? (
-        <p className="py-10 text-center text-sm text-subtle">{errorMessage}</p>
-      ) : searchResults.length === 0 ? (
+      ) : isError ? (
+        <p className="py-10 text-center text-sm text-subtle">검색 결과를 불러오지 못했어요.</p>
+      ) : isSuccess && searchResults.length === 0 ? (
         <p className="py-10 text-center text-sm text-subtle">검색 결과가 없어요.</p>
       ) : (
         <ul className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
