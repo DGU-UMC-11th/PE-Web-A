@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/utils/cn";
 import { checkEmailDuplicate } from "@/api/members/check-email-duplicate";
 import { checkNicknameDuplicate } from "@/api/members/check-nickname-duplicate";
@@ -271,7 +272,10 @@ export function SignupPage() {
         </button>
 
         <p className="mt-6 text-center text-sm text-muted">
-          이미 계정이 있나요? <span className="font-bold text-brand">로그인</span>
+          이미 계정이 있나요?{" "}
+          <Link to="/login" className="font-bold text-brand">
+            로그인
+          </Link>
         </p>
       </form>
     </main>

@@ -2,11 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { Icon } from "../common/icon";
-import type { TmdbMovieListItem } from "../../api/movies/models";
+import type { TmdbMovie } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
+// 목록(TmdbMovieListItem)과 상세(TmdbMovieDetail) 응답 모두 카드에 쓸 수 있도록 공통 필드만 받는다.
+export type MovieCardItem = Pick<TmdbMovie, "id" | "title" | "poster_path" | "release_date">;
+
 interface MovieCardProps {
-  movie: TmdbMovieListItem;
+  movie: MovieCardItem;
 }
 
 /**
