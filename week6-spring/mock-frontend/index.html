@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>6주차 · 영화 평점 서비스 API</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111524;color:#edf0f9;font:16px/1.6 system-ui,sans-serif}main{max-width:1380px;margin:34px auto;padding:20px}h1{font-size:32px;margin:8px 0}small{color:#b2b6ff;letter-spacing:2px}.muted{color:#aab5ca}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}button{font:inherit;padding:9px 13px;background:#282f48;color:#e4e7ff;border:1px solid #434b6c;border-radius:8px;cursor:pointer}button:hover{background:#3b4568}button:disabled{opacity:.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}section{background:#1b2235;border:1px solid #38425e;border-radius:16px;padding:24px;min-width:0}h2{margin-top:0;font-size:20px}input,select,textarea{color:#edf0ff;background:#10182a;border:1px solid #44506d;border-radius:7px;padding:10px;font:15px/1.6 ui-monospace,monospace}input{width:100%}textarea{width:100%;height:280px;resize:vertical}label{display:block;margin:12px 0 6px;color:#b9c5e0}#method{width:120px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#10182a;color:#c8f6df;padding:18px;border-radius:9px;min-height:280px;font:16px/1.7 ui-monospace,monospace}#send{background:#b9b2ff;color:#14152a;font-weight:bold;margin-top:14px}#status{color:#eed08f;font-size:22px}.context{margin-top:18px;color:#b8c4dd}.row{display:flex;gap:12px;align-items:center}.row input{flex:1}.request-line{overflow-wrap:anywhere;color:#c4bcff}#headers{font-size:13px;color:#97abc9}.foot{margin-top:22px;color:#96a4bd;font-size:14px}@media(max-width:850px){.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<small>UMC BACKEND / WEEK 06</small><h1>회원가입과 영화 평점 저장</h1><p class="muted">요청을 전송하고 실제 서버 응답을 확인합니다. 회원 ID는 가입 성공 시 자동 연결됩니다.</p>
+<div class="controls">
+<button data-case="signup">회원가입 성공</button><button data-case="invalid">이메일 검증 실패</button><button data-case="email">이메일 중복</button><button data-case="nickname">닉네임 중복</button><button data-case="create">평점 등록</button><button data-case="duplicate">평점 중복</button><button data-case="score">별점 범위 오류</button><button data-case="update">평점 수정</button><button data-case="list">평점 재조회</button><button data-case="forbidden">타인 수정 차단</button><button data-case="forbiddenDelete">타인 삭제 차단</button><button data-case="delete">평점 삭제</button><button data-case="missing">없는 평점 수정</button><button data-case="missingDelete">없는 평점 삭제</button><button id="race">동시 가입 요청 4개</button>
+</div>
+<h2 id="scenario">회원가입 성공</h2>
+<div class="grid"><section><h2>Request</h2><label for="base">백엔드 주소</label><input id="base" value="http://localhost:8082"><label for="path">메서드 / 경로</label><div class="row"><select id="method" aria-label="HTTP 메서드"><option>POST</option><option>GET</option><option>PATCH</option><option>DELETE</option></select><input id="path" value="/members"></div><label for="body">JSON 요청 본문</label><textarea id="body" spellcheck="false"></textarea><button id="send">요청 보내기</button><div class="context" id="context"></div></section>
+<section><h2>Response</h2><div class="request-line" id="requestLine">요청 대기</div><p id="status">아직 요청하지 않았습니다</p><pre id="response">서버 응답이 여기에 표시됩니다.</pre><p id="headers"></p></section></div>
+<p class="foot">프론트 http://localhost:5175 → 백엔드 http://localhost:8082 · 로그인 전 실습: memberId 경로 기반</p>
+</main><script>
+const $=id=>document.getElementById(id);
+const stamp=Date.now().toString(36).slice(-7);
+const user={email:`week6_${stamp}@example.com`,password:'Umc!1234',nickname:`영화${stamp}`};
+let memberId=1,ratingId=0;
+function context(){$('context').textContent=`현재 회원 ID: ${memberId} / 평점 ID: ${ratingId||'등록 전'}`;}
+function prepare(kind){
+ const cases={
+ signup:['회원가입 성공','POST','/members',user],
+ invalid:['이메일 형식 검증 실패','POST','/members',{...user,email:'invalid-email',nickname:'검증실패'}],
+ email:['이메일 중복 확인','POST','/members',{...user,nickname:'다른닉네임'}],
+ nickname:['닉네임 중복 확인','POST','/members',{...user,email:`other_${stamp}@example.com`}],
+ create:['평점 등록 성공','POST',`/members/${memberId}/ratings`,{movieId:550,score:5,comment:'인상적인 반전과 연출이 좋았습니다.'}],
+ duplicate:['같은 영화 중복 평점 차단','POST',`/members/${memberId}/ratings`,{movieId:550,score:4,comment:'중복 요청'}],
+ score:['별점 범위 검증 실패','POST',`/members/${memberId}/ratings`,{movieId:155,score:6,comment:'범위를 벗어난 별점'}],
+ update:['평점 수정 성공','PATCH',`/members/${memberId}/ratings/${ratingId}`,{score:4,comment:'다시 보고 별점을 수정했습니다.'}],
+ list:['회원별 평점 재조회','GET',`/members/${memberId}/ratings`,null],
+ forbidden:['다른 회원의 수정 요청 차단','PATCH',`/members/2/ratings/${ratingId}`,{score:1,comment:'다른 회원의 변경 시도'}],
+ forbiddenDelete:['다른 회원의 삭제 요청 차단','DELETE',`/members/2/ratings/${ratingId}`,null],
+ delete:['평점 삭제 성공','DELETE',`/members/${memberId}/ratings/${ratingId}`,null],
+ missing:['존재하지 않는 평점 수정','PATCH',`/members/${memberId}/ratings/${ratingId}`,{score:3,comment:'삭제된 평점'}],
+ missingDelete:['존재하지 않는 평점 삭제','DELETE',`/members/${memberId}/ratings/${ratingId}`,null]
+ };
+ const [name,method,path,body]=cases[kind];$('scenario').textContent=name;$('method').value=method;$('path').value=path;$('body').value=body?JSON.stringify(body,null,2):'';context();
+}
+for(const b of document.querySelectorAll('[data-case]'))b.addEventListener('click',()=>prepare(b.dataset.case));
+async function send(){
+ const method=$('method').value,url=$('base').value.replace(/\/$/,'')+$('path').value;
+ $('send').disabled=true;$('status').textContent='요청 중…';$('requestLine').textContent=method+' '+url;
+ try{
+ const options={method};if(!['GET','DELETE'].includes(method)){options.headers={'Content-Type':'application/json'};options.body=$('body').value;}
+ const r=await fetch(url,options),text=await r.text();let data=text?JSON.parse(text):null;
+ $('status').textContent=`HTTP ${r.status} ${r.statusText}`;$('response').textContent=text?JSON.stringify(data,null,2):'(응답 본문 없음)';$('headers').textContent=`Content-Type: ${r.headers.get('content-type')||'없음'} · ${new Date().toLocaleString('ko-KR')}`;
+ if(r.status===201&&$('path').value==='/members')memberId=data.result.memberId;
+ else if(r.status===201&&$('path').value.endsWith('/ratings'))ratingId=data.result;
+ context();
+ }catch(e){$('status').textContent='요청 실패';$('response').textContent=e.message;}finally{$('send').disabled=false;}
+}
+$('send').addEventListener('click',send);
+$('race').addEventListener('click',async()=>{
+ const email=`race_${Date.now()}@example.com`;
+ $('scenario').textContent='동시 가입 4개 · DB UNIQUE 제약 검증';$('method').value='POST';$('path').value='/members';
+ $('body').value=JSON.stringify({email,password:'Umc!1234',nickname:'각 요청마다 다른 닉네임 (race + 요청 번호)'},null,2);
+ $('requestLine').textContent='POST '+$('base').value+'/members × 4 (동시 요청)';$('status').textContent='동시 요청 중…';$('race').disabled=true;
+ try{
+ const token=Date.now().toString(36).slice(-5);
+ const results=await Promise.all([0,1,2,3].map(async i=>{const request={email,password:'Umc!1234',nickname:`race${token}${i}`};const r=await fetch($('base').value+'/members',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});return {requestIndex:i+1,status:r.status,body:await r.json()};}));
+ $('status').textContent=results.map(r=>r.status).join(' / ');$('response').textContent=JSON.stringify(results,null,2);$('headers').textContent='동일 이메일 / 서로 다른 닉네임 · 모든 결과는 실제 HTTP 응답';
+ }catch(e){$('response').textContent=e.message;}finally{$('race').disabled=false;}
+});
+prepare('signup');
+</script></body></html>

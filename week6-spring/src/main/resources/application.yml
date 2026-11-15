@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: umc-movie
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/umc_movie_week6}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD}
+  jackson:
+    deserialization:
+      accept-float-as-int: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+server:
+  port: ${SERVER_PORT:8082}
+app:
+  cors:
+    enabled: ${CORS_ENABLED:true}
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5175}
