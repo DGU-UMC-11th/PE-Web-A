@@ -33,4 +33,9 @@ public class Member extends BaseTimeEntity {
         this.password = password;
         this.nickname = nickname;
     }
+
+    // @Setter 대신 의도가 드러나는 수정 메서드만 열어둡니다
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

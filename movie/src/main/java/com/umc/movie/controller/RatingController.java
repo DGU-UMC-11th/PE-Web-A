@@ -5,6 +5,7 @@ import com.umc.movie.dto.ApiResponse;
 import com.umc.movie.dto.CreateRatingRequest;
 import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
+import com.umc.movie.interceptor.AuthInterceptor;
 import com.umc.movie.service.RatingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,38 +15,47 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// 클래스 레벨 @RequestMapping("/members")는 제거했습니다. (/ratings 로 나가야 하므로)
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/members")
 public class RatingController {
 
     private final RatingService ratingService;
 
-    @GetMapping("/{memberId}/ratings")
+    // 5주차에 만든 유저별 평점 조회입니다. 공개 API라 토큰을 받지 않습니다.
+    @GetMapping("/members/{memberId}/ratings")
     public List<RatingResponse> getMemberRatings(@PathVariable Long memberId) {
         return ratingService.getRatingsByMember(memberId);
     }
 
-    @PostMapping("/{memberId}/ratings")
-    public ResponseEntity<ApiResponse<Long>> createRating(@PathVariable Long memberId,
-                                                          @Valid @RequestBody CreateRatingRequest request) {
-        Long ratingId = ratingService.create(memberId, request);
+    // 경로에서 /members/{memberId}가 사라지고 memberId는 인터셉터가 담아둔 값을 씁니다
+    @PostMapping("/ratings")
+    public ResponseEntity<ApiResponse<RatingResponse>> createRating(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @RequestBody @Valid CreateRatingRequest request
+    ) {
+        RatingResponse response = ratingService.create(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.created("평점 등록에 성공했습니다.", ratingId));
+                .body(ApiResponse.created("평점을 등록했습니다.", response));
     }
 
-    @PatchMapping("/{memberId}/ratings/{ratingId}")
-    public ResponseEntity<ApiResponse<Void>> updateRating(@PathVariable Long memberId,
-                                                          @PathVariable Long ratingId,
-                                                          @Valid @RequestBody UpdateRatingRequest request) {
-        ratingService.update(memberId, ratingId, request);
-        return ResponseEntity.ok(ApiResponse.ok("평점 수정에 성공했습니다.", null));
+    @PatchMapping("/ratings/{ratingId}")
+    public ResponseEntity<ApiResponse<RatingResponse>> updateRating(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @PathVariable Long ratingId,
+            @RequestBody @Valid UpdateRatingRequest request
+    ) {
+        RatingResponse response = ratingService.update(memberId, ratingId, request);
+        return ResponseEntity.ok(ApiResponse.ok("평점을 수정했습니다.", response));
     }
 
-    @DeleteMapping("/{memberId}/ratings/{ratingId}")
-    public ResponseEntity<Void> deleteRating(@PathVariable Long memberId,
-                                             @PathVariable Long ratingId) {
+    // 모든 응답을 isSuccess/code/message 형태로 감싸므로 204 대신 200 + result null 을 씁니다
+    @DeleteMapping("/ratings/{ratingId}")
+    public ResponseEntity<ApiResponse<Void>> deleteRating(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @PathVariable Long ratingId
+    ) {
         ratingService.delete(memberId, ratingId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("평점을 삭제했습니다.", null));
     }
 }
