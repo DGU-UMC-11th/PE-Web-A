@@ -9,6 +9,8 @@ export default function Header() {
   const isMovieActive =
     pathname === "/" || pathname.startsWith("/movies/");
 
+  const isProfileActive = pathname.startsWith("/mypage");
+
   const isSearchActive = pathname.startsWith("/search");
 
   const menuText =
@@ -16,7 +18,7 @@ export default function Header() {
 
   return (
     <header className="w-full border-b border-[#e3e6eb] bg-white">
-      <div className="mx-auto flex h-[96px] w-full max-w-[1440px] items-center justify-between px-[80px] py-[24px]">
+      <div className="mx-auto flex h-[96px] w-full max-w-[1440px] items-center justify-between px-6 py-[24px] md:px-[80px]">
         <div className="flex items-center">
           <div className="flex items-center gap-[14px]">
             <Link
@@ -35,7 +37,7 @@ export default function Header() {
             </h1>
           </div>
 
-          <nav className="ml-[48px] flex items-center gap-[32px]">
+          <nav className="ml-5 flex items-center gap-4 md:ml-[48px] md:gap-[32px]">
             <Link
               to="/"
               className={cn(
@@ -61,14 +63,16 @@ export default function Header() {
               검색
             </Link>
 
-            <span
+            <Link
+              to="/mypage"
               className={cn(
-                "cursor-pointer py-[8px] text-[#606774] hover:text-[#17191e]",
+                "relative py-[8px] text-[#606774] hover:text-[#17191e]",
+                isProfileActive && "text-[#17191e] after:absolute after:bottom-[4px] after:left-0 after:right-0 after:h-px after:bg-[#17191e]",
                 menuText,
               )}
             >
               내 정보
-            </span>
+            </Link>
           </nav>
         </div>
 
@@ -85,14 +89,14 @@ export default function Header() {
             />
           </Link>
 
-          <button
-            type="button"
+          <Link
+            to="/login"
             className="flex h-[42px] items-center justify-center rounded-[8px] border-0 bg-[#2563eb] px-[18px] hover:bg-[#1d4ed8] active:bg-[#1748ad]"
           >
             <span className={cn("text-white", menuText)}>
               로그인
             </span>
-          </button>
+          </Link>
         </div>
       </div>
     </header>
