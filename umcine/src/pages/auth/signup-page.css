@@ -1,0 +1,97 @@
+.signup-page {
+  --signup-blue: #2563eb;
+  --signup-text: #171b22;
+  --signup-muted: #596477;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 72px);
+  min-height: calc(100dvh - 72px);
+  padding: 48px 20px;
+  background: #f4f6f8;
+  color: var(--signup-text);
+  font-family: inherit;
+}
+
+.signup-panel {
+  width: 100%;
+  max-width: 368px;
+}
+
+.signup-title {
+  margin: 0 0 18px;
+  font-size: 30px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.signup-form {
+  display: grid;
+  gap: 12px;
+}
+
+.signup-field {
+  display: grid;
+  gap: 4px;
+}
+
+.signup-field label {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.signup-input-row {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.signup-input-row:focus-within {
+  border-color: var(--signup-blue);
+  box-shadow: 0 0 0 2px #2563eb24;
+}
+
+.signup-input-row input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+}
+
+.signup-input-row input::placeholder {
+  color: var(--signup-muted);
+}
+
+.signup-check {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--signup-blue);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.signup-check:disabled {
+  color: #526ca4;
+}
+
+.signup-hint,
+.signup-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
