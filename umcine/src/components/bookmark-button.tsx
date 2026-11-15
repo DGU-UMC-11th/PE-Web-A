@@ -15,14 +15,16 @@ export function BookmarkButton({ movieId, className }: BookmarkButtonProps) {
   return (
     <button
       type="button"
+      aria-pressed={isBookmarked}
+      aria-label={isBookmarked ? "북마크 해제" : "북마크 추가"}
       onClick={() => toggleBookmark(movieId)}
       className={cn(
-        "rounded-full px-3 py-1.5 text-xs text-white",
+        "rounded-full px-3 py-1 text-sm font-bold text-white",
         isBookmarked ? "bg-blue-600" : "bg-black/60",
         className,
       )}
     >
-      {isBookmarked ? "북마크 해제" : "북마크 추가"}
+      {isBookmarked ? "★ 북마크 해제" : "☆ 북마크 추가"}
     </button>
   );
 }
