@@ -1,91 +1,82 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { getMovies } from "../../api/movies/get-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export function MovieListPage() {
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    let ignore = false;
+  const moviesQuery = useQuery({
+    queryKey: ["movies", "list", { page }],
+    queryFn: () => getMovies({ page }),
+  });
 
-    async function loadMovies() {
-      setIsLoading(true);
-      setErrorMessage(null);
+  const movies = moviesQuery.data?.results ?? [];
+  const totalPages = moviesQuery.data?.total_pages ?? 0;
 
-      try {
-        const response = await getMovies({ page });
-
-        if (!ignore) {
-          setMovies(response.results);
-          setTotalPages(response.total_pages);
-        }
-      } catch {
-        if (!ignore) {
-          setMovies([]);
-          setErrorMessage("영화 목록을 불러오지 못했어요.");
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadMovies();
-
-    return () => {
-      ignore = true;
-    };
-  }, [page, retryCount]);
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+  };
 
   return (
-    <main style={{ padding: "24px", maxWidth: "1200px", margin: "auto" }}>
+    <main
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "auto",
+      }}
+    >
       <header style={{ marginBottom: "24px" }}>
         <h1>UMCine</h1>
 
         <nav style={{ display: "flex", gap: "20px" }}>
-          <a href="/">인기 영화</a>
-          <a href="/search">영화 검색</a>
+          <Link to="/">인기 영화</Link>
+          <Link to="/search" search={{ query: "" }}>
+            영화 검색
+          </Link>
         </nav>
       </header>
 
       <h2>인기 영화 목록</h2>
 
-      {isLoading ? (
+      {moviesQuery.isPending ? (
         <p>영화 목록을 불러오는 중이에요.</p>
-      ) : errorMessage ? (
+      ) : moviesQuery.isError ? (
         <div>
-          <p>{errorMessage}</p>
-          <button onClick={() => setRetryCount((count) => count + 1)}>
+          <p>{moviesQuery.error.message}</p>
+          <button
+            onClick={() => {
+              void moviesQuery.refetch();
+            }}
+          >
             다시 시도
           </button>
         </div>
       ) : movies.length === 0 ? (
-        <p>조건에 맞는 영화가 없어요.</p>
+        <p>표시할 영화가 없어요.</p>
       ) : (
         <>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(180px, 1fr))",
               gap: "20px",
               marginTop: "20px",
             }}
           >
             {movies.map((movie) => {
-              const posterUrl = getTmdbPosterUrl(movie.poster_path);
+              const posterUrl = getTmdbPosterUrl(
+                movie.poster_path
+              );
 
               return (
-                <a
+                <Link
                   key={movie.id}
-                  href={`/movies/${movie.id}`}
+                  to="/movies/$movieId"
+                  params={{ movieId: String(movie.id) }}
                   style={{
                     textDecoration: "none",
                     color: "inherit",
@@ -121,10 +112,15 @@ export function MovieListPage() {
 
                   <div style={{ padding: "12px" }}>
                     <h3>{movie.title}</h3>
-                    <p>개봉일: {movie.release_date || "정보 없음"}</p>
-                    <p>평점: {movie.vote_average.toFixed(1)}</p>
+                    <p>
+                      개봉일:{" "}
+                      {movie.release_date || "정보 없음"}
+                    </p>
+                    <p>
+                      평점: {movie.vote_average.toFixed(1)}
+                    </p>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>
@@ -140,7 +136,9 @@ export function MovieListPage() {
           >
             <button
               disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              onClick={() =>
+                handlePageChange(Math.max(1, page - 1))
+              }
             >
               이전
             </button>
@@ -151,7 +149,9 @@ export function MovieListPage() {
 
             <button
               disabled={page >= totalPages}
-              onClick={() => setPage((prev) => prev + 1)}
+              onClick={() =>
+                handlePageChange(page + 1)
+              }
             >
               다음
             </button>
@@ -159,7 +159,12 @@ export function MovieListPage() {
         </>
       )}
 
-      <footer style={{ marginTop: "50px", textAlign: "center" }}>
+      <footer
+        style={{
+          marginTop: "50px",
+          textAlign: "center",
+        }}
+      >
         <a
           href="https://www.themoviedb.org/"
           target="_blank"
@@ -168,7 +173,8 @@ export function MovieListPage() {
           TMDB
         </a>
         <p style={{ fontSize: "12px" }}>
-          This product uses the TMDB API but is not endorsed or certified by TMDB.
+          This product uses the TMDB API but is
+          not endorsed or certified by TMDB.
         </p>
       </footer>
     </main>
