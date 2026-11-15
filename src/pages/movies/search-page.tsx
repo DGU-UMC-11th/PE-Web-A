@@ -1,77 +1,65 @@
+
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type SubmitEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import Pagination from "../../components/movies/pagination";
 import { RetryButton } from "../../components/retry-button";
 import { BookmarkButton } from "../../components/bookmark-button";
-import { searchMovies } from "../../api/movies/search-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
+import { movieQueryOptions } from "../../api/movies/query-options";
 
 export function SearchPage() {
-  const { query = "", page = 1 } = useSearch({ from: "/search" });
+  // URL에서 검색어와 페이지 번호 가져오기
+  const { query = "", page = 1 } = useSearch({
+    from: "/search",
+  });
+
   const navigate = useNavigate({ from: "/search" });
 
-  const [searchText, setSearchText] = useState(query ?? "");
+  // 검색창 입력값
+  const [searchText, setSearchText] = useState(query);
 
+  // URL의 검색어가 변경되면 검색창도 변경
   useEffect(() => {
-    setSearchText(query ?? "");
+    setSearchText(query);
   }, [query]);
 
   const normalizedQuery = query.trim();
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalResults, setTotalResults] = useState(0);
-  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    let ignore = false;
-    const normalizedQuery = query.trim();
+  // TanStack Query로 검색 요청
+  const searchQuery = useQuery(movieQueryOptions.search({ query: normalizedQuery, page }));
 
-    setMovies([]);
-    setErrorMessage(null);
-    setTotalPages(0);
-    setTotalResults(0);
+  // 서버 응답 데이터
+  const movies = searchQuery.data?.results ?? [];
+  const totalPages = searchQuery.data?.total_pages ?? 0;
+  const totalResults = searchQuery.data?.total_results ?? 0;
 
-    if (!normalizedQuery) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    searchMovies({ query: normalizedQuery, page })
-      .then((response) => {
-        if (!ignore) {
-          setMovies(response.results);
-          setTotalPages(response.total_pages);
-          setTotalResults(response.total_results);
-        }
-      })
-      .catch(() => {
-        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [query, page, retryCount]);
-
+  // 검색 버튼 클릭
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const nextQuery = searchText.trim();
 
-    navigate({
-      search: nextQuery ? { query: nextQuery, page: 1 } : {},
+    void navigate({
+      search: nextQuery
+        ? { query: nextQuery, page: 1 }
+        : {},
     });
   }
 
+  // 검색어 지우기
   function handleClear() {
     setSearchText("");
+  }
+
+  // 페이지 변경
+  function handlePageChange(nextPage: number) {
+    void navigate({
+      search: {
+        query: normalizedQuery,
+        page: nextPage,
+      },
+    });
   }
 
   return (
@@ -96,7 +84,9 @@ export function SearchPage() {
               <input
                 aria-label="검색어"
                 value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
+                onChange={(event) =>
+                  setSearchText(event.target.value)
+                }
                 placeholder="예: 스파이더맨"
                 className="min-w-0 flex-1 bg-transparent text-[18px] text-[#17191e] outline-none placeholder:text-[#969da8]"
               />
@@ -131,7 +121,9 @@ export function SearchPage() {
                 <input
                   aria-label="검색어"
                   value={searchText}
-                  onChange={(event) => setSearchText(event.target.value)}
+                  onChange={(event) =>
+                    setSearchText(event.target.value)
+                  }
                   className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-[#17191e] outline-none"
                 />
 
@@ -142,7 +134,9 @@ export function SearchPage() {
                     className="mr-4 flex h-[24px] w-[24px] items-center justify-center text-[#606774]"
                     aria-label="검색어 지우기"
                   >
-                    <span className="text-[24px] leading-none">×</span>
+                    <span className="text-[24px] leading-none">
+                      ×
+                    </span>
                   </button>
                 )}
 
@@ -165,12 +159,22 @@ export function SearchPage() {
               </p>
             </div>
 
-            {isLoading ? (
-              <p role="status">검색 결과를 불러오는 중이에요.</p>
-            ) : errorMessage ? (
+            {/* API 요청 상태 처리 */}
+            {searchQuery.isLoading ? (
+              <p role="status">
+                검색 결과를 불러오는 중이에요.
+              </p>
+            ) : searchQuery.isError ? (
               <div>
-                <p role="alert">{errorMessage}</p>
-                <RetryButton onRetry={() => { setIsLoading(true); setRetryCount((count) => count + 1); }} />
+                <p role="alert">
+                  {searchQuery.error.message}
+                </p>
+
+                <RetryButton
+                  onRetry={() => {
+                    void searchQuery.refetch();
+                  }}
+                />
               </div>
             ) : movies.length === 0 ? (
               <div className="py-20 text-center">
@@ -192,21 +196,32 @@ export function SearchPage() {
                     <div className="relative shrink-0">
                       <Link
                         to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
+                        params={{
+                          movieId: String(movie.id),
+                        }}
                       >
-                        {movie.poster_path ? <img
-                          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                          alt={`${movie.title} 포스터`}
-                          className="h-[190px] w-[126px] rounded-[12px] object-cover"
-                        /> : <div className="flex h-[190px] w-[126px] items-center justify-center rounded-[12px] bg-gray-200">포스터 없음</div>}
+                        {movie.poster_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                            alt={`${movie.title} 포스터`}
+                            className="h-[190px] w-[126px] rounded-[12px] object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-[190px] w-[126px] items-center justify-center rounded-[12px] bg-gray-200">
+                            포스터 없음
+                          </div>
+                        )}
                       </Link>
+
                       <BookmarkButton movieId={movie.id} />
                     </div>
 
                     <div className="flex min-w-0 flex-1 flex-col">
                       <Link
                         to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
+                        params={{
+                          movieId: String(movie.id),
+                        }}
                         className="no-underline"
                       >
                         <h3 className="text-[18px] font-extrabold leading-[25px] text-[#17191e]">
@@ -216,7 +231,9 @@ export function SearchPage() {
 
                       <div className="mt-[10px] flex items-center gap-[14px] text-[14px] leading-[20px] text-[#969da8]">
                         <span>{movie.original_title}</span>
-                        <span>{movie.release_date || "개봉일 미정"}</span>
+                        <span>
+                          {movie.release_date || "개봉일 미정"}
+                        </span>
                       </div>
 
                       <p className="mt-[16px] line-clamp-2 text-[14px] leading-[22px] text-[#606774]">
@@ -225,7 +242,9 @@ export function SearchPage() {
 
                       <Link
                         to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
+                        params={{
+                          movieId: String(movie.id),
+                        }}
                         className="mt-[28px] text-[14px] font-bold leading-[20px] text-[#2563eb] no-underline"
                       >
                         상세 보기 →
@@ -235,12 +254,16 @@ export function SearchPage() {
                 ))}
               </ul>
             )}
-            {!isLoading && !errorMessage && (
-              <Pagination currentPage={page} totalPages={totalPages}
-                onPageChange={(nextPage) => { void navigate({ search: { query, page: nextPage } }); }} />
+
+            {/* 검색 결과 페이지네이션 */}
+            {searchQuery.isSuccess && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </section>
-
         </div>
       )}
     </main>
