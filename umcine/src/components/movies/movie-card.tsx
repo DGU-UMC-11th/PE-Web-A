@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { Icon } from "../common/icon";
 import type { TmdbMovie } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
+import { useIsFavoriteInList } from "@/hooks/use-favorites-query";
+import { useToggleFavorite } from "@/hooks/use-toggle-favorite";
 
 // 목록(TmdbMovieListItem)과 상세(TmdbMovieDetail) 응답 모두 카드에 쓸 수 있도록 공통 필드만 받는다.
 export type MovieCardItem = Pick<TmdbMovie, "id" | "title" | "poster_path" | "release_date">;
@@ -14,15 +15,14 @@ interface MovieCardProps {
 
 /**
  * 영화 포스터, 제목, 개봉일과 북마크 버튼을 보여주는 카드
- * 북마크 상태는 Zustand store에서 읽고 바꾼다.
+ * 북마크 상태는 서버 즐겨찾기 목록(GET /favorites) 캐시로 판단하고, 누르면 추가·해제한다.
  * @param movie 표시할 영화 정보
  */
 function MovieCard({ movie }: MovieCardProps) {
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(movie.id),
-  );
+  const isFavorite = useIsFavoriteInList(movie.id);
+  const isBookmarked = isFavorite === true;
   const posterUrl = getTmdbPosterUrl(movie.poster_path);
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const { toggleFavorite, isPending } = useToggleFavorite(movie.id, isFavorite);
 
   return (
     <article className="relative flex w-full flex-col">
@@ -52,7 +52,8 @@ function MovieCard({ movie }: MovieCardProps) {
           "absolute top-2.5 right-2.5 flex size-[34px] cursor-pointer items-center justify-center rounded-lg border border-white",
           isBookmarked ? "bg-brand" : "bg-black/60",
         )}
-        onClick={() => toggleBookmark(movie.id)}
+        onClick={toggleFavorite}
+        disabled={isPending}
         aria-label={`${movie.title} ${isBookmarked ? "북마크 해제" : "북마크 추가"}`}
         aria-pressed={isBookmarked}
       >

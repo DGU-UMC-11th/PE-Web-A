@@ -2,7 +2,6 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { Icon } from "../../components/common/icon";
-import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { formatRuntime } from "../../utils/movies/format-runtime";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
@@ -10,8 +9,10 @@ import {
   getTmdbBackdropUrl,
   getTmdbPosterUrl,
 } from "../../utils/movies/tmdb-image";
-
-const ratingScores = [1, 2, 3, 4, 5];
+import { MyRatingPanel } from "@/components/movies/my-rating-panel";
+import { useFavoriteStatusQuery } from "@/hooks/use-favorite-status-query";
+import { useToggleFavorite } from "@/hooks/use-toggle-favorite";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
@@ -30,10 +31,15 @@ export function MovieDetailPage() {
     staleTime: 30 * 1000,
   });
 
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(parsedMovieId),
+  // 상세에서는 GET /favorites/{movieId}로 이 영화의 즐겨찾기 여부를 확인한다.
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const favoriteStatusQuery = useFavoriteStatusQuery(parsedMovieId, isValidMovieId);
+  const isFavorite = accessToken ? favoriteStatusQuery.data?.isFavorite : false;
+  const isBookmarked = isFavorite === true;
+  const { toggleFavorite, isPending: isFavoritePending } = useToggleFavorite(
+    parsedMovieId,
+    isFavorite,
   );
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
   if (!isValidMovieId) {
     return (
@@ -116,10 +122,11 @@ export function MovieDetailPage() {
           <p className="text-sm/6 text-muted">{movie.overview}</p>
           <button
             type="button"
-            onClick={() => toggleBookmark(movie.id)}
+            onClick={toggleFavorite}
+            disabled={isFavoritePending}
             aria-pressed={isBookmarked}
             className={cn(
-              "inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-white px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white",
+              "inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 self-start rounded-lg border border-white px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50",
               isBookmarked ? "bg-ink" : "bg-brand",
             )}
           >
@@ -131,33 +138,7 @@ export function MovieDetailPage() {
           </button>
         </div>
 
-        <aside className="flex w-full shrink-0 flex-col gap-2 border-line pb-[41px] lg:w-[360px] lg:border-l lg:pl-[30px]">
-          <h2 className="text-[21px]/[25px] font-bold tracking-[-0.63px] text-ink">내 평점</h2>
-          <p className="text-xs/[14px] text-subtle">별점은 필수, 후기는 선택이에요.</p>
-          <div className="flex gap-1">
-            {ratingScores.map((score) => (
-              <button
-                key={score}
-                type="button"
-                aria-label={`${score}점`}
-                className="flex size-[38px] cursor-pointer items-center justify-center rounded-lg border border-line bg-white"
-              >
-                <Icon name="star" className="size-6 text-muted" />
-              </button>
-            ))}
-          </div>
-          <textarea
-            aria-label="후기"
-            placeholder="영화를 보고 느낀 점을 남겨보세요."
-            className="h-[102px] w-full resize-none rounded-lg border border-line bg-white px-3 pt-4 pb-[18px] text-[13px]/5 text-ink placeholder:text-subtle"
-          />
-          <button
-            type="button"
-            className="h-[42px] w-full cursor-pointer rounded-lg border border-white bg-ink text-sm/[17px] font-extrabold text-white"
-          >
-            평점 저장
-          </button>
-        </aside>
+        <MyRatingPanel key={movie.id} movieId={movie.id} />
       </div>
     </main>
   );

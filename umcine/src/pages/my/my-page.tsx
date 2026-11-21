@@ -4,18 +4,18 @@ import { getMovieDetail } from "@/api/movies/get-movie-detail";
 import { ProfileAvatar } from "@/components/my/profile-avatar";
 import MovieGrid from "@/components/movies/movie-grid";
 import Pagination from "@/components/movies/pagination";
+import { useFavoritesQuery } from "@/hooks/use-favorites-query";
 import { useMeQuery } from "@/hooks/use-me-query";
-import { useAuthStore } from "@/stores/auth-store";
-import { useBookmarkStore } from "@/stores/bookmark-store";
 
 const sectionTitleClass = "text-lg/[21px] font-bold text-ink";
 const infoLabelClass = "text-xs/[14px] text-subtle";
 const infoValueClass = "text-base/[19px] font-bold break-all text-ink";
 
 export function MyPage() {
-  const accessToken = useAuthStore((state) => state.accessToken);
   const meQuery = useMeQuery();
-  const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
+  // 서버에 저장된 즐겨찾기 목록에서 movieId만 꺼내 TMDB 상세를 불러온다.
+  const favoritesQuery = useFavoritesQuery();
+  const bookmarkedMovieIds = favoritesQuery.data?.map((favorite) => favorite.movieId) ?? [];
 
   // 상세 화면과 같은 queryKey를 써서, 이미 본 영화는 캐시를 그대로 재사용한다.
   const bookmarkedMovies = useQueries({
@@ -45,14 +45,7 @@ export function MyPage() {
 
       <section className="mt-6 flex flex-col gap-5 border-t border-line pt-6">
         <h2 className={sectionTitleClass}>기본 정보</h2>
-        {!accessToken ? (
-          <p className="text-muted">
-            로그인이 필요해요.{" "}
-            <Link to="/login" className="font-bold text-brand">
-              로그인
-            </Link>
-          </p>
-        ) : meQuery.isPending ? (
+        {meQuery.isPending ? (
           <p className="text-muted">내 정보를 불러오는 중이에요.</p>
         ) : meQuery.isError ? (
           <p className="text-muted">내 정보를 불러오지 못했어요.</p>
@@ -76,7 +69,11 @@ export function MyPage() {
 
       <section className="mt-8 flex flex-col gap-5 border-t border-line pt-6">
         <h2 className={sectionTitleClass}>내 즐겨찾기</h2>
-        {bookmarkedMovieIds.length === 0 ? (
+        {favoritesQuery.isPending ? (
+          <p className="text-muted">즐겨찾기한 영화를 불러오는 중이에요.</p>
+        ) : favoritesQuery.isError ? (
+          <p className="text-muted">즐겨찾기 목록을 불러오지 못했어요.</p>
+        ) : bookmarkedMovieIds.length === 0 ? (
           <p className="text-muted">즐겨찾기한 영화가 없어요.</p>
         ) : bookmarkedMovies.isPending ? (
           <p className="text-muted">즐겨찾기한 영화를 불러오는 중이에요.</p>

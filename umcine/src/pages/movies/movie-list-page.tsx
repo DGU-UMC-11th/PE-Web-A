@@ -4,7 +4,7 @@ import MovieGrid from "../../components/movies/movie-grid";
 
 /**
  * 영화 목록을 보여주는 페이지
- * 북마크 상태는 Zustand store에서 관리한다.
+ * 북마크 상태는 서버 즐겨찾기 목록으로 판단한다.
  */
 export function MovieListPage() {
   const { data, isPending, isError } = useQuery({
