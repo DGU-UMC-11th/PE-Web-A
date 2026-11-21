@@ -42,3 +42,8 @@ desktop.ini
 .claude/settings.local.json
 .tanstack/
 .tanstack/
+
+# Gradle / IntelliJ
+.gradle/
+build/
+.idea/
