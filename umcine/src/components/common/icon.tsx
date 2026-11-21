@@ -7,7 +7,11 @@ type IconName =
   | "chevron-left"
   | "chevron-right"
   | "close"
+  | "edit"
+  | "lock"
+  | "mail"
   | "movie"
+  | "person"
   | "search"
   | "star"
   | "star-outline";
