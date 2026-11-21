@@ -4,7 +4,8 @@ import { getMovieDetail } from "@/api/movies/get-movie-detail";
 import { ProfileAvatar } from "@/components/my/profile-avatar";
 import MovieGrid from "@/components/movies/movie-grid";
 import Pagination from "@/components/movies/pagination";
-import { MOCK_USER } from "@/pages/my/mock-user";
+import { useMeQuery } from "@/hooks/use-me-query";
+import { useAuthStore } from "@/stores/auth-store";
 import { useBookmarkStore } from "@/stores/bookmark-store";
 
 const sectionTitleClass = "text-lg/[21px] font-bold text-ink";
@@ -12,6 +13,8 @@ const infoLabelClass = "text-xs/[14px] text-subtle";
 const infoValueClass = "text-base/[19px] font-bold break-all text-ink";
 
 export function MyPage() {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useMeQuery();
   const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
 
   // 상세 화면과 같은 queryKey를 써서, 이미 본 영화는 캐시를 그대로 재사용한다.
@@ -42,19 +45,33 @@ export function MyPage() {
 
       <section className="mt-6 flex flex-col gap-5 border-t border-line pt-6">
         <h2 className={sectionTitleClass}>기본 정보</h2>
-        <div className="flex items-center gap-6">
-          <ProfileAvatar imageUrl={MOCK_USER.profileImageUrl} />
-          <dl className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-[120px]">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <dt className={infoLabelClass}>닉네임</dt>
-              <dd className={infoValueClass}>{MOCK_USER.nickname}</dd>
-            </div>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <dt className={infoLabelClass}>이메일</dt>
-              <dd className={infoValueClass}>{MOCK_USER.email}</dd>
-            </div>
-          </dl>
-        </div>
+        {!accessToken ? (
+          <p className="text-muted">
+            로그인이 필요해요.{" "}
+            <Link to="/login" className="font-bold text-brand">
+              로그인
+            </Link>
+          </p>
+        ) : meQuery.isPending ? (
+          <p className="text-muted">내 정보를 불러오는 중이에요.</p>
+        ) : meQuery.isError ? (
+          <p className="text-muted">내 정보를 불러오지 못했어요.</p>
+        ) : (
+          <div className="flex items-center gap-6">
+            {/* 프로필 이미지 API가 없어 기본 아이콘을 보여준다. */}
+            <ProfileAvatar imageUrl={null} />
+            <dl className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-[120px]">
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <dt className={infoLabelClass}>닉네임</dt>
+                <dd className={infoValueClass}>{meQuery.data.nickname}</dd>
+              </div>
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <dt className={infoLabelClass}>이메일</dt>
+                <dd className={infoValueClass}>{meQuery.data.email}</dd>
+              </div>
+            </dl>
+          </div>
+        )}
       </section>
 
       <section className="mt-8 flex flex-col gap-5 border-t border-line pt-6">
