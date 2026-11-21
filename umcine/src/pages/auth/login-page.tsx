@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Icon } from "@/components/common/icon";
+import { useLoginMutation } from "@/hooks/use-login-mutation";
 
 // 이메일 형식 검사 (회원가입과 같은 규칙)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,6 +21,7 @@ const labelClass = "text-sm font-bold text-ink";
 
 export function LoginPage() {
   const [form, setForm] = useState(DEFAULT_FORM);
+  const loginMutation = useLoginMutation();
 
   // 이메일 형식이 맞고 비밀번호가 비어 있지 않으면 제출 가능
   const canSubmit = EMAIL_REGEX.test(form.email.trim()) && form.password.length > 0;
@@ -30,9 +32,9 @@ export function LoginPage() {
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || loginMutation.isPending) return;
 
-    alert("로그인 API는 8주차에 연결할 예정이에요.");
+    loginMutation.mutate({ email: form.email.trim(), password: form.password });
   };
 
   return (
@@ -86,10 +88,10 @@ export function LoginPage() {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || loginMutation.isPending}
           className="mt-7 h-[46px] w-full cursor-pointer rounded-lg bg-brand text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          로그인
+          {loginMutation.isPending ? "로그인 중" : "로그인"}
         </button>
 
         <p className="mt-6 text-center text-sm text-muted">
