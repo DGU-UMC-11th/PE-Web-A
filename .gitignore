@@ -47,3 +47,8 @@ desktop.ini
 .gradle/
 build/
 .idea/
+
+# Gradle / IntelliJ
+.gradle/
+build/
+.idea/
