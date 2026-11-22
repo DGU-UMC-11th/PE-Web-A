@@ -23,9 +23,27 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String[] allowedOrigins;
 
-    // 기존 CORS 설정 유지
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/auth/login")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("POST")
+                .maxAge(3600);
+
+        registry.addMapping("/favorites/**")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("GET", "POST", "DELETE")
+                .maxAge(3600);
+        registry.addMapping("/ratings/**")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("POST", "PATCH", "DELETE")
+                .maxAge(3600);
+
+        registry.addMapping("/members/me")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("GET", "PATCH")
+                .maxAge(3600);
+
         registry.addMapping("/members/**")
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST")
