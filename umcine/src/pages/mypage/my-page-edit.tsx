@@ -1,12 +1,28 @@
+import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
 
 export function MyPageEdit() {
-  const [nickname, setNickname] = useState("영화광");
+  const [form, setForm] = useState({ nickname: "" });
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // 내 정보 수정 API 연결은 8주차에 할 예정
-    alert(`닉네임을 ${nickname}(으)로 수정했어요.`);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const updateMeMutation = useUpdateMeMutation();
+  const nickname = form.nickname.trim();
+  const canSubmit = nickname.length >= 2 && nickname.length <= 12;
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit || updateMeMutation.isPending) return;
+
+    updateMeMutation.mutate({ nickname });
   };
 
   return (
@@ -17,15 +33,24 @@ export function MyPageEdit() {
         <label htmlFor="nickname" className="font-bold">닉네임</label>
         <input
           id="nickname"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          value={form.nickname}
+          onChange={(e) => setForm({ nickname: e.target.value })}
+          placeholder={meQuery.data?.nickname ?? "2~12자"}
           className="rounded border border-neutral-300 px-4 py-2"
         />
         <p className="text-sm text-neutral-500">변경할 닉네임: {nickname}</p>
-        <button type="submit" className="rounded bg-neutral-900 py-3 font-bold text-white">
-          저장
+        <button
+          type="submit"
+          disabled={!canSubmit || updateMeMutation.isPending}
+          className="rounded bg-neutral-900 py-3 font-bold text-white disabled:opacity-40"
+        >
+          {updateMeMutation.isPending ? "저장 중" : "저장"}
         </button>
       </form>
+
+      <Link to="/mypage" className="mt-6 block text-center text-sm underline">
+        내 정보로 돌아가기
+      </Link>
     </main>
   );
 }
