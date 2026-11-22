@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.umc.movie.exception.ApiException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -141,5 +141,11 @@ public class GlobalExceptionHandler {
                         "COMMON" + status,
                         exception.getReason()
                 ));
+    }
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException exception) {
+        return ResponseEntity.status(exception.getStatus())
+                .body(ApiResponse.failure(exception.getCode(), exception.getMessage()));
     }
 }
