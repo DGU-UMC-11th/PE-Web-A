@@ -1,7 +1,8 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import { BookmarkButton } from "../../components/bookmark-button";
+import { FavoriteButton } from "../../components/movies/favorite-button";
+import { MyRating } from "../../components/movies/my-rating";
 import { MovieImage } from "../../components/movies/movie-image";
 import { StatusMessage } from "../../components/status-message";
 import { formatRuntime } from "../../utils/movies/format-runtime";
@@ -17,7 +18,7 @@ export function MovieDetailPage() {
     queryKey: ["movies", "detail", parsedMovieId],
     queryFn: () => getMovieDetail(parsedMovieId),
     enabled: isValidMovieId,
-    staleTime: 30 * 1000, // 미니 실습: 상세 화면만 30초 동안 fresh
+    staleTime: 30 * 1000,
   });
 
   if (!isValidMovieId) {
@@ -64,7 +65,10 @@ export function MovieDetailPage() {
           <p>{formatRuntime(movie.runtime)}</p>
           {movie.tagline && <h2 className="mt-4 text-xl font-bold">{movie.tagline}</h2>}
           <p className="leading-relaxed">{movie.overview || "줄거리 정보가 없어요."}</p>
-          <BookmarkButton movieId={movie.id} className="mt-2 self-start" />
+
+          {/* 8주차: 서버 즐겨찾기와 내 평점 */}
+          <FavoriteButton movieId={movie.id} />
+          <MyRating movieId={movie.id} />
         </div>
       </div>
     </main>
