@@ -1,0 +1,40 @@
+package com.umc.movie.entity;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "member")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
+    private Long memberId;
+
+    @Column(nullable = false, unique = true, length = 254)
+    private String email;
+
+    @Column(nullable = false, length = 60)
+    private String password;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String nickname;
+
+    @Builder
+    public Member(String email, String password, String nickname) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+    }
+
+    // 7주차: 바꿀 수 있는 건 닉네임뿐이라는 게 드러나게 메서드 하나만 열어 둡니다
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+}
