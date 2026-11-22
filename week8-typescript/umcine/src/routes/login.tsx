@@ -1,0 +1,5 @@
+import { useAuthStore } from "../stores/auth-store";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { LoginPage } from "../pages/auth/login-page";
+
+export const Route = createFileRoute("/login")({ beforeLoad: () => { if (useAuthStore.getState().accessToken) throw redirect({ to: "/", search: { page: 1 } }); }, component: LoginPage });
