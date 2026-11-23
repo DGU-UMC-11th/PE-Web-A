@@ -21,6 +21,8 @@ export function MovieListPage() {
     {moviesQuery.isPending ? <p role="status" className="py-20 text-center">{moviesQuery.isPaused ? '인터넷 연결을 기다리고 있어요.' : '영화 목록을 불러오는 중이에요.'}</p>
       : moviesQuery.isError ? <div role="alert" className="py-20 text-center"><p>{getMovieErrorMessage(moviesQuery.error, '영화 목록을 불러오지 못했어요.')}</p><button type="button" onClick={() => void moviesQuery.refetch()} disabled={moviesQuery.isFetching} className="mt-4 rounded bg-[#20242c] px-4 py-2 text-white">다시 시도</button></div>
       : movies.length === 0 ? <p className="py-20 text-center">조건에 맞는 영화가 없어요.</p>
-      : <><MovieGrid movies={movies} /><Pagination page={page} totalPages={totalPages} onPageChange={setPage} /></>}
+      : <><div aria-busy={moviesQuery.isPlaceholderData}>
+        {moviesQuery.isPlaceholderData && <p role="status" className="mb-4">다음 영화 목록을 불러오는 중이에요.</p>}
+        <MovieGrid movies={movies} /></div><Pagination page={page} totalPages={totalPages} onPageChange={setPage} /></>}
   </main>;
 }
