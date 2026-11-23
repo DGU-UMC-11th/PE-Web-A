@@ -31,7 +31,9 @@ export function useLoginMutation() {
 export function useUpdateMeMutation() {
   const client = useQueryClient();
   const token = useAuthStore(state => state.accessToken);
-  return useMutation({ mutationFn: updateMe, onSuccess: member => {
+  return useMutation({ mutationFn: updateMe, onSuccess: async member => {
+    if (useAuthStore.getState().accessToken !== token) return;
+    await client.cancelQueries({ queryKey: ['members', 'me'], exact: true });
     if (useAuthStore.getState().accessToken === token) client.setQueryData(['members', 'me'], member);
   } });
 }
