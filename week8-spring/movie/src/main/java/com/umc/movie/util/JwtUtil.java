@@ -16,6 +16,8 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
+    // 지원 범위를 30일로 제한해 만료 시각의 Instant 및 Date 변환 오버플로를 방지한다.
+    public static final long MAX_EXPIRATION_SECONDS = 30L * 24 * 60 * 60;
     private final SecretKey key;
     private final long expirationSeconds;
 
@@ -23,7 +25,9 @@ public class JwtUtil {
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.access-expiration}") long expirationSeconds) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        if (expirationSeconds <= 0) throw new IllegalArgumentException("JWT 유효시간은 양수여야 합니다.");
+        if (expirationSeconds <= 0 || expirationSeconds > MAX_EXPIRATION_SECONDS) {
+            throw new IllegalArgumentException("JWT_ACCESS_EXPIRATION은 1~" + MAX_EXPIRATION_SECONDS + "초여야 합니다.");
+        }
         this.expirationSeconds = expirationSeconds;
     }
 

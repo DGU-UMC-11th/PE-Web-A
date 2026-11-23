@@ -19,4 +19,5 @@ app:
 
 jwt:
   secret: ${JWT_SECRET}
+  # 지원 범위: 1~2592000초(30일). 범위 밖이면 기동 시 거절한다.
   access-expiration: ${JWT_ACCESS_EXPIRATION:3600}
