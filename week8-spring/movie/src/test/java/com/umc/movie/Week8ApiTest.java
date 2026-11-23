@@ -33,7 +33,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {"app.cors.enabled=true", "app.cors.allowed-origin=http://localhost:5173"})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class Week8ApiTest {
