@@ -25,7 +25,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if ("GET".equals(method) && (path.matches("/members/(email|nickname)/[^/]+")
                 || path.matches("/members/[0-9]+/ratings"))) return true;
         String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ") || header.substring(7).isBlank()) {
+        if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7) || header.substring(7).isBlank()) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTH401_2", "로그인이 필요한 요청입니다.");
         }
         request.setAttribute(MEMBER_ID, jwtUtil.getMemberId(header.substring(7)));
