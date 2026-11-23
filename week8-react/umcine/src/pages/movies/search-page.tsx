@@ -1,3 +1,4 @@
+import { Pagination } from '../../components/movies/pagination';
 import { BookmarkButton } from '../../components/movies/bookmark-button';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useState, type SubmitEvent } from 'react';
@@ -38,9 +39,10 @@ export function SearchPage() {
 /** 비어 있지 않은 검색어로 조회하고 로딩, 오류, 빈 결과를 구분해 표시한다. */
 function SearchContent({ query }: { query: string }) {
   const normalized = query.trim();
+  const [page, setPage] = useState(1);
   const searchQuery = useQuery({
-    queryKey: ['movies', 'search', { query: normalized }],
-    queryFn: ({ signal }) => searchMovies({ query: normalized, signal }),
+    queryKey: ['movies', 'search', { query: normalized, page }],
+    queryFn: ({ signal }) => searchMovies({ query: normalized, page, signal }),
     enabled: normalized.length > 0,
   });
   const data = searchQuery.data;
@@ -80,6 +82,7 @@ function SearchContent({ query }: { query: string }) {
             </div>
           </li>)}
         </ul>}
+      {searchQuery.isSuccess && <Pagination page={page} totalPages={Math.min(data?.total_pages ?? 0, 500)} onPageChange={setPage} />}
     </section>}
   </main>;
 }
