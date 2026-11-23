@@ -1,5 +1,5 @@
 /** 개발 화면 확인용 모의 API. 실제 인증·서버 저장을 제공하지 않는다. */
-interface Member { memberId: number; email: string; nickname: string; passwordHash: string; createdAt: string }
+interface Member { memberId: number; email: string; nickname: string; createdAt: string }
 interface Rating { ratingId: number; memberId: number; movieId: number; score: number; comment: string; createdAt: string; updatedAt: string }
 interface Database {
   members: Member[];
@@ -10,6 +10,9 @@ interface Database {
   nextRatingId: number;
 }
 const key = 'umcine-mock-api-v1';
+// 가입 비밀번호의 검증값은 현재 탭의 메모리에만 보관한다.
+// 새로고침·다른 탭에서는 공개 계정 demo@umcine.test / Umcine!1234로 로그인한다.
+const credentials = new Map<string, string>();
 
 /** 모의 계정의 비밀번호 원문을 저장하지 않기 위한 비교값이다. 실제 비밀번호 보안 구현은 아니다. */
 async function hash(password: string) {
@@ -18,15 +21,20 @@ async function hash(password: string) {
 }
 
 /** 새로고침 뒤에도 테스트 데이터를 유지하고, 처음에는 테스트 계정을 제공한다. */
-async function loadDatabase(): Promise<Database> {
+function loadDatabase(): Database {
   const saved = localStorage.getItem(key);
   if (saved) {
     try {
       const db = JSON.parse(saved) as Database;
-      if (Array.isArray(db.members) && Array.isArray(db.ratings) && Array.isArray(db.favorites) && db.sessions && Number.isInteger(db.nextMemberId) && Number.isInteger(db.nextRatingId)) return db;
+      if (Array.isArray(db.members) && Array.isArray(db.ratings) && Array.isArray(db.favorites) && db.sessions && Number.isInteger(db.nextMemberId) && Number.isInteger(db.nextRatingId)) {
+        // 이전 버전의 passwordHash를 포함한 추가 필드는 영속 저장소에서 제거한다.
+        db.members = db.members.map(({ memberId, email, nickname, createdAt }) => ({ memberId, email, nickname, createdAt }));
+        localStorage.setItem(key, JSON.stringify(db));
+        return db;
+      }
     } catch { /* 손상된 개발 데이터는 초기화한다. */ }
   }
-  return { members: [{ memberId: 1, email: 'demo@umcine.test', nickname: '영화팬', passwordHash: await hash('Umcine!1234'), createdAt: new Date().toISOString() }], favorites: [], ratings: [], sessions: {}, nextMemberId: 2, nextRatingId: 1 };
+  return { members: [{ memberId: 1, email: 'demo@umcine.test', nickname: '영화팬', createdAt: new Date().toISOString() }], favorites: [], ratings: [], sessions: {}, nextMemberId: 2, nextRatingId: 1 };
 }
 
 /** 실제 API와 같은 상태 코드와 응답 봉투를 반환한다. */
@@ -45,20 +53,20 @@ let queue: Promise<unknown> = Promise.resolve();
 /** ky의 fetch만 대체한다. 인증 헤더·오류 처리·React Query 흐름은 실제 요청과 동일하다. */
 export const mockFetch: typeof fetch = (input, init) => {
   const request = new Request(input, init);
-  const task = queue.then(async () => {
+  const task = queue.then(() => navigator.locks.request(key, { signal: request.signal }, async () => {
     request.signal.throwIfAborted();
     const response = await handle(request);
     request.signal.throwIfAborted();
     return response;
-  });
+  }));
   queue = task.catch(() => undefined);
   return task;
 };
 
 /** 회원·즐겨찾기·평점 요청을 브라우저의 개발 데이터에 반영한다. */
 async function handle(request: Request): Promise<Response> {
-  const db = await loadDatabase();
-  const path = decodeURIComponent(new URL(request.url).pathname).replace(/\/$/, '');
+  const db = loadDatabase();
+  const path = new URL(request.url).pathname.replace(/\/$/, '');
   const method = request.method;
   let body: Record<string, unknown> = {};
   if (method === 'POST' || method === 'PATCH') {
@@ -67,18 +75,23 @@ async function handle(request: Request): Promise<Response> {
   }
   const save = (response: Response) => { localStorage.setItem(key, JSON.stringify(db)); return response; };
   const check = path.match(/^\/members\/(email|nickname)\/(.+)$/);
-  if (method === 'GET' && check) return reply(200, { available: !db.members.some(member => member[check[1] as 'email' | 'nickname'] === check[2]) });
+  if (method === 'GET' && check) {
+    let value: string;
+    try { value = decodeURIComponent(check[2]); } catch { return reply(400, null, '요청 경로를 확인해 주세요.'); }
+    return reply(200, { available: !db.members.some(member => member[check[1] as 'email' | 'nickname'] === value) });
+  }
   if (path === '/members' && method === 'POST') {
     const { email, nickname, password } = body;
     if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof nickname !== 'string' || nickname.trim().length < 2 || nickname.trim().length > 12 || typeof password !== 'string' || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/.test(password)) return reply(400, null, '이메일·닉네임·비밀번호 입력 조건을 확인해 주세요.');
     if (db.members.some(member => member.email === email || member.nickname === nickname.trim())) return reply(409, null, '이미 사용 중인 이메일 또는 닉네임이에요.');
-    const member = { memberId: db.nextMemberId++, email, nickname: nickname.trim(), passwordHash: await hash(password), createdAt: new Date().toISOString() };
+    const member = { memberId: db.nextMemberId++, email, nickname: nickname.trim(), createdAt: new Date().toISOString() };
+    credentials.set(email, await hash(password));
     db.members.push(member);
     return save(reply(201, profile(member), '회원가입이 완료됐어요.'));
   }
   if (path === '/auth/login' && method === 'POST') {
     const member = db.members.find(member => member.email === body.email);
-    if (!member || typeof body.password !== 'string' || member.passwordHash !== await hash(body.password)) return reply(401, null, '이메일 또는 비밀번호가 올바르지 않아요.');
+    if (!member || typeof body.password !== 'string' || (member.email === 'demo@umcine.test' ? body.password !== 'Umcine!1234' : credentials.get(member.email) !== await hash(body.password))) return reply(401, null, '이메일 또는 비밀번호가 올바르지 않아요.');
     const accessToken = `mock-${crypto.randomUUID()}`;
     db.sessions[accessToken] = member.memberId;
     return save(reply(200, { nickname: member.nickname, accessToken }));
