@@ -18,8 +18,17 @@ export function useFavorite(movieId: number) {
     mutationFn: (active: boolean) => setFavorite(movieId, active),
     onSuccess: async (_, active) => {
       if (useAuthStore.getState().accessToken !== token) return;
+      await client.cancelQueries({ queryKey: ['favorites', 'detail', movieId], exact: true });
+      if (useAuthStore.getState().accessToken !== token) return;
       client.setQueryData(['favorites', 'detail', movieId], { isFavorite: active });
       await client.invalidateQueries({ queryKey: ['favorites', 'list'] });
+    },
+    onError: async () => {
+      if (useAuthStore.getState().accessToken !== token) return;
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['favorites', 'detail', movieId], exact: true }),
+        client.invalidateQueries({ queryKey: ['favorites', 'list'] }),
+      ]);
     },
   });
   return { query, mutation };
