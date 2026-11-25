@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Icon } from "@/components/common/icon";
 import { ProfileAvatar } from "@/components/my/profile-avatar";
-import { MOCK_USER } from "@/pages/my/mock-user";
+import { useMeQuery } from "@/hooks/use-me-query";
+import { useUpdateMeMutation } from "@/hooks/use-update-me-mutation";
 
 // 프로필 이미지 최대 크기 (5MB)
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -16,8 +17,12 @@ const checkButtonClass =
 const errorClass = "text-xs text-red-500";
 
 export function MyEditPage() {
-  const [nickname, setNickname] = useState(MOCK_USER.nickname);
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const meQuery = useMeQuery();
+  const updateMeMutation = useUpdateMeMutation();
+  // 사용자가 직접 입력하기 전(null)에는 내 정보의 닉네임을 그대로 보여준다.
+  // 데이터가 도착하면 입력값이 바로 채워지므로 useEffect로 state를 맞출 필요가 없다.
+  const [nicknameDraft, setNicknameDraft] = useState<string | null>(null);
+  const nickname = nicknameDraft ?? meQuery.data?.nickname ?? "";
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,6 +30,8 @@ export function MyEditPage() {
   const trimmedNickname = nickname.trim();
   const isNicknameValid = trimmedNickname.length >= 2 && trimmedNickname.length <= 12;
   const showNicknameError = nickname.length > 0 && !isNicknameValid;
+  // 내 정보를 불러온 뒤에만 저장할 수 있다.
+  const canSubmit = Boolean(meQuery.data) && isNicknameValid;
 
   // 미리보기 URL이 바뀌거나 화면을 벗어나면 이전 URL을 해제한다.
   useEffect(() => {
@@ -44,7 +51,7 @@ export function MyEditPage() {
       return;
     }
 
-    setProfileImageFile(file);
+    // 프로필 이미지 API가 없어 미리보기만 보여준다.
     setPreviewUrl(URL.createObjectURL(file));
   };
 
@@ -54,12 +61,9 @@ export function MyEditPage() {
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isNicknameValid) return;
+    if (!canSubmit || updateMeMutation.isPending) return;
 
-    // API 연결은 8주차
-    alert(
-      `닉네임: ${trimmedNickname}\n프로필 이미지: ${profileImageFile ? `선택함 (${profileImageFile.name})` : "선택 안 함"}`,
-    );
+    updateMeMutation.mutate({ nickname: trimmedNickname });
   };
 
   const handleWithdraw = () => {
@@ -79,17 +83,17 @@ export function MyEditPage() {
           </div>
           <button
             type="submit"
-            disabled={!isNicknameValid}
+            disabled={!canSubmit || updateMeMutation.isPending}
             className="h-[42px] shrink-0 cursor-pointer rounded-lg bg-brand px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            변경사항 저장
+            {updateMeMutation.isPending ? "저장 중" : "변경사항 저장"}
           </button>
         </div>
 
         <div className="mt-6 flex flex-col gap-10 border-t border-line pt-8 lg:flex-row lg:gap-20">
           <div className="flex flex-col items-center gap-3 text-center lg:w-[220px] lg:shrink-0">
             <div className="relative">
-              <ProfileAvatar imageUrl={previewUrl ?? MOCK_USER.profileImageUrl} />
+              <ProfileAvatar imageUrl={previewUrl} />
               <button
                 type="button"
                 aria-label="프로필 이미지 변경"
@@ -123,7 +127,7 @@ export function MyEditPage() {
                   type="text"
                   placeholder="2-12자"
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={(e) => setNicknameDraft(e.target.value)}
                   className={inputClass}
                 />
                 <button
@@ -148,7 +152,7 @@ export function MyEditPage() {
                 <input
                   id="my-edit-email"
                   type="email"
-                  value={MOCK_USER.email}
+                  value={meQuery.data?.email ?? ""}
                   readOnly
                   disabled
                   className={inputClass}

@@ -4,9 +4,10 @@ import { useState, type SubmitEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { Icon } from "../../components/common/icon";
-import { useBookmarkStore } from "../../stores/bookmark-store";
 import { cn } from "../../utils/cn";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
+import { useIsFavoriteInList } from "@/hooks/use-favorites-query";
+import { useToggleFavorite } from "@/hooks/use-toggle-favorite";
 
 interface SearchResultItemProps {
   movie: TmdbMovieListItem;
@@ -15,16 +16,15 @@ interface SearchResultItemProps {
 }
 
 /**
- * 검색 결과 한 항목. 북마크 상태는 Zustand store에서 읽고 바꾼다.
+ * 검색 결과 한 항목. 북마크 상태는 서버 즐겨찾기 목록(GET /favorites) 캐시로 판단한다.
  * @param movie 표시할 영화 정보
  * @param hasDivider 아래 구분선을 그릴지 여부
  * @param isInLastRow lg 이상 2열 그리드의 마지막 행인지 여부
  */
 function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemProps) {
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(movie.id),
-  );
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const isFavorite = useIsFavoriteInList(movie.id);
+  const isBookmarked = isFavorite === true;
+  const { toggleFavorite, isPending } = useToggleFavorite(movie.id, isFavorite);
   const posterUrl = getTmdbPosterUrl(movie.poster_path);
 
   return (
@@ -53,7 +53,8 @@ function SearchResultItem({ movie, hasDivider, isInLastRow }: SearchResultItemPr
             "absolute top-2.5 right-2.5 flex size-[34px] cursor-pointer items-center justify-center rounded-lg border border-white",
             isBookmarked ? "bg-brand" : "bg-black/60",
           )}
-          onClick={() => toggleBookmark(movie.id)}
+          onClick={toggleFavorite}
+          disabled={isPending}
           aria-label={`${movie.title} ${isBookmarked ? "북마크 해제" : "북마크 추가"}`}
           aria-pressed={isBookmarked}
         >

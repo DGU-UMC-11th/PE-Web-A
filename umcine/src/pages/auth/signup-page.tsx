@@ -3,9 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/utils/cn";
 import { checkEmailDuplicate } from "@/api/members/check-email-duplicate";
 import { checkNicknameDuplicate } from "@/api/members/check-nickname-duplicate";
-import { signup } from "@/api/members/signup";
-// /login 라우트가 생기면 주석 해제
-// import { useNavigate } from "@tanstack/react-router";
+import { useSignupMutation } from "@/hooks/use-signup-mutation";
 
 const DEFAULT_DUPLICATE_CHECK = {
   isChecking: false,
@@ -49,8 +47,7 @@ export function SignupPage() {
     email: DEFAULT_DUPLICATE_CHECK,
     nickname: DEFAULT_DUPLICATE_CHECK,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // const navigate = useNavigate();
+  const signupMutation = useSignupMutation();
 
   // 입력값의 유효성 검사
   const isEmailValid = EMAIL_REGEX.test(form.email.trim());
@@ -67,7 +64,7 @@ export function SignupPage() {
   const showPasswordConfirmError =
     form.passwordConfirm.length > 0 && !isPasswordConfirmValid;
 
-  // 모든 입력값이 유효하면 제출 버튼 활성화
+  // 모든 입력값이 유효하면 true
   const isFormValid =
     isEmailValid &&
     isNicknameValid &&
@@ -133,28 +130,18 @@ export function SignupPage() {
     }
   };
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     // 폼 제출 시 페이지 새로고침 방지
-    e.preventDefault();
+    event.preventDefault();
 
-    if (!canSubmit || isSubmitting) return;
+    if (!canSubmit || signupMutation.isPending) return;
 
-    setIsSubmitting(true);
-
-    try {
-      // passwordConfirm은 화면 검증용이라 서버로 보내지 않음
-      const response = await signup({
-        email: form.email.trim(),
-        nickname: form.nickname.trim(),
-        password: form.password,
-      });
-      alert(response.message);
-      // navigate({ to: "/login" });
-    } catch {
-      alert("회원가입에 실패했어요. 다시 시도해 주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // passwordConfirm은 화면 검증용이라 서버로 보내지 않음
+    signupMutation.mutate({
+      email: form.email.trim(),
+      nickname: form.nickname.trim(),
+      password: form.password,
+    });
   };
 
   // noValidate는 폼 제출 시 브라우저의 기본 유효성 검사를 끔
@@ -265,10 +252,10 @@ export function SignupPage() {
 
         <button
           type="submit"
-          disabled={!canSubmit || isSubmitting}
+          disabled={!canSubmit || signupMutation.isPending}
           className="mt-7 h-[46px] w-full cursor-pointer rounded-lg bg-brand text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? "가입 중" : "가입하기"}
+          {signupMutation.isPending ? "가입 중" : "가입하기"}
         </button>
 
         <p className="mt-6 text-center text-sm text-muted">

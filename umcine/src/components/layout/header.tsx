@@ -1,10 +1,14 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
 import { Icon } from "../common/icon";
+import { useMeQuery } from "@/hooks/use-me-query";
+import { useAuthStore } from "@/stores/auth-store";
 
 const navItemClassName = "underline-offset-4";
 const activeNavItemClassName = "text-ink underline";
 const inactiveNavItemClassName = "text-muted";
+const authButtonClassName =
+  "inline-flex h-[42px] min-w-[71px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white bg-brand px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white";
 
 /**
  * 로고, 내비게이션 메뉴, 검색 버튼, 로그인 버튼을 보여주는 상단 헤더
@@ -16,6 +20,9 @@ export function Header() {
   const isSearchActive = Boolean(matchRoute({ to: "/search" }));
   // /my와 그 하위 경로(/my/edit)에서 활성
   const isMyActive = Boolean(matchRoute({ to: "/my", fuzzy: true }));
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useMeQuery();
 
   return (
     <header className="w-full border-b border-line bg-white">
@@ -68,12 +75,20 @@ export function Header() {
           >
             <Icon name="search" className="size-6 text-muted" />
           </Link>
-          <Link
-            to="/login"
-            className="inline-flex h-[42px] min-w-[71px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white bg-brand px-4 text-sm/[17px] font-extrabold whitespace-nowrap text-white"
-          >
-            로그인
-          </Link>
+          {!accessToken ? (
+            <Link to="/login" className={authButtonClassName}>
+              로그인
+            </Link>
+          ) : meQuery.isLoading ? (
+            <span
+              aria-label="내 정보를 불러오는 중"
+              className="h-[42px] w-[95px] shrink-0 animate-pulse rounded-lg bg-line"
+            />
+          ) : (
+            <Link to="/my" className={authButtonClassName}>
+              마이페이지
+            </Link>
+          )}
         </div>
       </div>
     </header>
