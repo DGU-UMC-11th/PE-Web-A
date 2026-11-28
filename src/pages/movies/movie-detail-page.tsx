@@ -1,12 +1,12 @@
 
 import { Link, useParams } from "@tanstack/react-router";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { RetryButton } from "../../components/retry-button";
 import { movieQueryOptions } from "../../api/movies/query-options";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { BookmarkButton } from "../../components/bookmark-button";
+import { MovieRating } from "./movie-rating";
 
 export function MovieDetailPage() {
   // URL에서 영화 ID 가져오기
@@ -20,19 +20,6 @@ export function MovieDetailPage() {
 
   // 6주차: TanStack Query로 영화 상세 정보 요청
   const movieDetailQuery = useQuery(movieQueryOptions.detail(movieId));
-
-  // 기존 평점과 후기 상태
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState("");
-
-  // 기존 Zustand 즐겨찾기 상태
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(movieId)
-  );
-
-  const toggleBookmark = useBookmarkStore(
-    (state) => state.toggleBookmark
-  );
 
   // 1. 유효하지 않은 영화 ID
   if (!isValidMovieId) {
@@ -169,94 +156,10 @@ export function MovieDetailPage() {
             {movie.overview}
           </p>
 
-          {/* Zustand 즐겨찾기 버튼 */}
-          <button
-            type="button"
-            onClick={() => toggleBookmark(movieId)}
-            aria-pressed={isBookmarked}
-            aria-label={
-              isBookmarked
-                ? "즐겨찾기 해제"
-                : "즐겨찾기 추가"
-            }
-            className="mt-4 inline-flex h-[42px] w-fit min-w-[120px] self-start items-center justify-center gap-2 rounded-[8px] px-4 text-[14px] font-bold text-white transition-colors"
-            style={{
-              backgroundColor: isBookmarked
-                ? "#1d4ed8"
-                : "#2563eb",
-              color: "#ffffff",
-            }}
-          >
-            <img
-              src={
-                isBookmarked
-                  ? "/icons/movie-icons/bookmark.svg"
-                  : "/icons/movie-icons/bookmark-outline.svg"
-              }
-              alt=""
-              className="block h-[20px] w-[20px] shrink-0 brightness-0 invert"
-            />
-
-            <span className="whitespace-nowrap">
-              {isBookmarked
-                ? "즐겨찾기 "
-                : "즐겨찾기"}
-            </span>
-          </button>
+          <BookmarkButton movieId={movieId} detail />
         </div>
 
-        {/* 평점 및 후기 작성 */}
-        <aside className="h-[294px] w-[360px] shrink-0 border-l border-[#d9dde3] pl-[28px]">
-          <h2 className="text-[20px] font-extrabold leading-[28px] text-[#17191e]">
-            내 평점
-          </h2>
-
-          <p className="mt-[4px] text-[12px] leading-[18px] text-[#969da8]">
-            별점은 필수, 후기는 선택이에요.
-          </p>
-
-          {/* 별점 선택 */}
-          <div className="mt-[12px] flex gap-[8px]">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => setRating(star)}
-                aria-label={`${star}점`}
-                aria-pressed={rating === star}
-                className="flex h-[38px] w-[38px] items-center justify-center rounded-[8px] border border-[#d9dde3] bg-white text-[24px]"
-              >
-                <span
-                  className={
-                    star <= rating
-                      ? "text-[#f7b500]"
-                      : "text-[#606774]"
-                  }
-                >
-                  ★
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* 후기 입력 */}
-          <textarea
-            value={review}
-            onChange={(event) =>
-              setReview(event.target.value)
-            }
-            placeholder="영화를 보고 느낀 점을 남겨보세요."
-            className="mt-[12px] h-[100px] w-full resize-none rounded-[8px] border border-[#d9dde3] bg-white p-[14px] text-[13px] leading-[20px] text-[#17191e] outline-none placeholder:text-[#969da8]"
-          />
-
-          {/* 기존 UI 유지: 저장 기능은 별도 구현 필요 */}
-          <button
-            type="button"
-            className="mt-[10px] h-[40px] w-full rounded-[7px] bg-[#17191e] text-[14px] font-bold text-white"
-          >
-            평점 저장
-          </button>
-        </aside>
+        <MovieRating key={movieId} movieId={movieId} />
       </section>
     </main>
   );

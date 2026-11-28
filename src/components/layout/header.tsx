@@ -1,9 +1,25 @@
+
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
 
 export default function Header() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
+  });
+
+  // 8주차: 로그인 토큰 가져오기
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  // 8주차: 토큰이 있을 때만 내 정보 조회
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 
   const isMovieActive =
@@ -67,7 +83,8 @@ export default function Header() {
               to="/mypage"
               className={cn(
                 "relative py-[8px] text-[#606774] hover:text-[#17191e]",
-                isProfileActive && "text-[#17191e] after:absolute after:bottom-[4px] after:left-0 after:right-0 after:h-px after:bg-[#17191e]",
+                isProfileActive &&
+                  "text-[#17191e] after:absolute after:bottom-[4px] after:left-0 after:right-0 after:h-px after:bg-[#17191e]",
                 menuText,
               )}
             >
@@ -89,14 +106,31 @@ export default function Header() {
             />
           </Link>
 
-          <Link
-            to="/login"
-            className="flex h-[42px] items-center justify-center rounded-[8px] border-0 bg-[#2563eb] px-[18px] hover:bg-[#1d4ed8] active:bg-[#1748ad]"
-          >
-            <span className={cn("text-white", menuText)}>
-              로그인
-            </span>
-          </Link>
+          {/* 8주차: 로그인 상태에 따른 버튼 변경 */}
+          {!accessToken ? (
+            // 로그인 전
+            <Link
+              to="/login"
+              className="flex h-[42px] items-center justify-center rounded-[8px] border-0 bg-[#2563eb] px-[18px] hover:bg-[#1d4ed8] active:bg-[#1748ad]"
+            >
+              <span className={cn("text-white", menuText)}>
+                로그인
+              </span>
+            </Link>
+          ) : meQuery.isLoading ? (
+            // 회원 정보 조회 중
+            <span className="h-[42px] w-[100px] animate-pulse rounded-[8px] bg-gray-200" />
+          ) : (
+            // 로그인 후
+            <Link
+              to="/mypage"
+              className="flex h-[42px] items-center justify-center rounded-[8px] border-0 bg-[#2563eb] px-[18px] hover:bg-[#1d4ed8] active:bg-[#1748ad]"
+            >
+              <span className={cn("text-white", menuText)}>
+                마이페이지
+              </span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
