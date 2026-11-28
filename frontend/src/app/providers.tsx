@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useState, type ReactNode } from "react";
 import { hydrateBookmarkStore } from "../stores/bookmark-store";
+import { useAuthStore } from "../stores/auth-store";
 import { useProfileStore } from "../stores/profile-store";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     hydrateBookmarkStore();
     void useProfileStore.persist?.rehydrate();
+    void useAuthStore.persist.rehydrate();
   }, []);
 
   return (

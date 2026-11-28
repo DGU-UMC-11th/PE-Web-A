@@ -1,0 +1,55 @@
+// src/main/java/com/umc/movie/service/MovieRecordService.java
+package com.umc.movie.service;
+
+import com.umc.movie.dto.CreateFavoriteRequest;
+import com.umc.movie.dto.CreateMovieRecordRequest;
+import com.umc.movie.dto.FavoriteResponse;
+import com.umc.movie.dto.MovieRecordResponse;
+import com.umc.movie.dto.RatingResponse;
+import com.umc.movie.entity.Member;
+import com.umc.movie.entity.Rating;
+import com.umc.movie.exception.ApiException;
+import com.umc.movie.repository.MemberRepository;
+import com.umc.movie.repository.RatingRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class MovieRecordService {
+
+    private final MemberRepository memberRepository;
+    private final RatingRepository ratingRepository;
+    private final FavoriteService favoriteService;
+
+    @Transactional
+    public MovieRecordResponse create(Long memberId, CreateMovieRecordRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "MEMBER404_1",
+                        "해당 회원을 찾을 수 없습니다."));
+
+        if (ratingRepository.existsByMember_MemberIdAndMovieId(memberId, request.movieId())) {
+            throw new ApiException(HttpStatus.CONFLICT, "RATING409_1",
+                    "이미 이 영화에 평점을 남기셨습니다.");
+        }
+
+        Rating rating = Rating.builder()
+                .member(member)
+                .movieId(request.movieId())
+                .score(request.score())
+                .comment(request.comment())
+                .build();
+        Rating savedRating = ratingRepository.save(rating);
+
+        FavoriteResponse favoriteResponse = request.addToFavorites()
+                ? favoriteService.create(memberId, new CreateFavoriteRequest(request.movieId()))
+                : null;
+
+        return new MovieRecordResponse(
+                RatingResponse.from(savedRating),
+                favoriteResponse
+        );
+    }
+}
