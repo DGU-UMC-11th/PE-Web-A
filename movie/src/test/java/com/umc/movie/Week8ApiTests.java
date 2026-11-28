@@ -10,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -94,8 +96,25 @@ class Week8ApiTests {
 
     @Test
     void swaggerIsPublicAndDocumentsBearerAuthForProtectedOperations() throws Exception {
+        // given
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
-        mvc.perform(get("/v3/api-docs"))
+        var protectedOperations = List.of(
+                "$.paths['/ratings'].post",
+                "$.paths['/ratings/{ratingId}'].patch",
+                "$.paths['/ratings/{ratingId}'].delete",
+                "$.paths['/members/me'].get",
+                "$.paths['/members/me'].patch",
+                "$.paths['/favorites'].get",
+                "$.paths['/favorites/{movieId}'].get",
+                "$.paths['/favorites/{movieId}'].delete"
+        );
+        String publicRatings = "$.paths['/members/{memberId}/ratings'].get";
+
+        // when
+        var docs = mvc.perform(get("/v3/api-docs"));
+
+        // then
+        docs
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
                 .andExpect(jsonPath("$.paths['/favorites'].post.security[0].bearerAuth").isArray())
@@ -105,6 +124,27 @@ class Week8ApiTests {
                         .value(org.hamcrest.Matchers.containsString("RATING409_1")))
                 .andExpect(jsonPath("$.paths['/movie-records'].post.responses['201'].content['application/json'].examples").exists())
                 .andExpect(jsonPath("$.paths['/auth/login'].post.security").doesNotExist());
+
+        for (String operation : protectedOperations) {
+            docs.andExpect(jsonPath(operation + ".description").exists())
+                    .andExpect(jsonPath(operation + ".security[0].bearerAuth").isArray())
+                    .andExpect(jsonPath(operation + ".responses['401'].description")
+                            .value(org.hamcrest.Matchers.containsString("AUTH401_2")));
+        }
+        docs.andExpect(jsonPath("$.security").doesNotExist())
+                .andExpect(jsonPath(publicRatings + ".security").doesNotExist())
+                .andExpect(jsonPath(publicRatings + ".description")
+                        .value(org.hamcrest.Matchers.containsString("JWT 없이")))
+                .andExpect(jsonPath(publicRatings + ".responses['200'].content['*/*'].schema['$ref']")
+                        .value("#/components/schemas/RatingPageResponse"))
+                .andExpect(jsonPath(publicRatings + ".responses['404'].description")
+                        .value(org.hamcrest.Matchers.containsString("MEMBER404_1")))
+                .andExpect(jsonPath("$.paths['/ratings'].post.responses['409'].description")
+                        .value(org.hamcrest.Matchers.containsString("RATING409_1")))
+                .andExpect(jsonPath("$.paths['/ratings/{ratingId}'].patch.responses['403'].description")
+                        .value(org.hamcrest.Matchers.containsString("RATING403_1")))
+                .andExpect(jsonPath("$.paths['/members/me'].patch.responses['409'].description")
+                        .value(org.hamcrest.Matchers.containsString("MEMBER409_1")));
     }
 
     private Member createMember(String nickname) {

@@ -1,8 +1,12 @@
 package com.umc.movie;
 
 import com.umc.movie.config.WebConfig;
+import com.umc.movie.controller.MemberController;
+import com.umc.movie.controller.RatingController;
 import com.umc.movie.dto.*;
+import com.umc.movie.resolver.LoginMemberArgumentResolver;
 import com.umc.movie.service.*;
+import com.umc.movie.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -14,12 +18,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+@WebMvcTest(
+        controllers = {MemberController.class, RatingController.class},
+        properties = "app.cors.allowed-origins=http://localhost:5500"
+)
 @Import(WebConfig.class)
 class MemberApiTests {
     @Autowired MockMvc mvc;
     @MockitoBean MemberService members;
     @MockitoBean RatingService ratings;
+    @MockitoBean JwtUtil jwtUtil;
+    @MockitoBean LoginMemberArgumentResolver loginMemberArgumentResolver;
 
     @Test void validNicknameAndEmail() throws Exception {
         when(members.checkNickname("suhyun")).thenReturn(new NicknameCheckResponse(true));
