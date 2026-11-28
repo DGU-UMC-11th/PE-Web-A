@@ -27,3 +27,8 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+
+# Next.js
+.next/
+next-env.d.ts
+out/
