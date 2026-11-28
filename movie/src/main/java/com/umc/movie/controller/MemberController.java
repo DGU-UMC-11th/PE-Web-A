@@ -2,6 +2,8 @@
 package com.umc.movie.controller;
 
 import com.umc.movie.dto.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.umc.movie.dto.EmailCheckResponse;
 import com.umc.movie.dto.MemberInfoResponse;
 import com.umc.movie.dto.MemberResponse;
@@ -65,9 +67,10 @@ public class MemberController {
     }
 
     // 7주차: 내 정보 조회
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
-            @LoginMember Long memberId
+            @Parameter(hidden = true) @LoginMember Long memberId
     ) {
         MemberInfoResponse response = memberService.getMyInfo(memberId);
 
@@ -76,9 +79,10 @@ public class MemberController {
         );
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyInfo(
-            @LoginMember Long memberId,
+            @Parameter(hidden = true) @LoginMember Long memberId,
             @RequestBody @Valid MemberUpdateRequest request
     ) {
         MemberInfoResponse response = memberService.updateMyInfo(memberId, request);
