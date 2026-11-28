@@ -102,23 +102,24 @@ class MemberRatingRegressionTests {
                         .header("Access-Control-Request-Headers", "authorization, content-type"))
                 .andExpect(status().isOk());
         mvc.perform(get("/favorites/10").header("Authorization", owner))
-                .andExpect(jsonPath("$.result.favorited").value(false));
-        for (int attempt = 0; attempt < 2; attempt++) {
-            mvc.perform(post("/favorites").header("Authorization", owner).contentType("application/json")
-                            .content("{\"movieId\":10}"))
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.result.favorited").value(true));
-        }
+                .andExpect(jsonPath("$.result.isFavorite").value(false));
+        mvc.perform(post("/favorites").header("Authorization", owner).contentType("application/json")
+                        .content("{\"movieId\":10}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.result.movieId").value(10));
+        mvc.perform(post("/favorites").header("Authorization", owner).contentType("application/json")
+                        .content("{\"movieId\":10}"))
+                .andExpect(status().isConflict());
         mvc.perform(get("/favorites").header("Authorization", owner))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.result.length()").value(1))
-                .andExpect(jsonPath("$.result[0]").value(10));
+                .andExpect(jsonPath("$.result[0].movieId").value(10));
         mvc.perform(get("/favorites").header("Authorization", other))
                 .andExpect(jsonPath("$.result").isEmpty());
         mvc.perform(delete("/favorites/10").header("Authorization", other))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNotFound());
         mvc.perform(get("/favorites/10").header("Authorization", owner))
-                .andExpect(jsonPath("$.result.favorited").value(true));
+                .andExpect(jsonPath("$.result.isFavorite").value(true));
         mvc.perform(delete("/favorites/10").header("Authorization", owner))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         mvc.perform(get("/favorites").header("Authorization", owner))
                 .andExpect(jsonPath("$.result").isEmpty());
     }

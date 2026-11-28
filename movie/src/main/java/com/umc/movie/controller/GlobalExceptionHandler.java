@@ -10,6 +10,7 @@ import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -78,12 +79,18 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnreadableBody() {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.failure("COMMON4001", "요청 본문의 형식이 올바르지 않습니다."));
+    }
+
     // 5. DB 제약 조건 위반
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(
             DataIntegrityViolationException exception
     ) {
-        // SQL/입력값 전체를 노출하지 않고, 알려진 회원 UNIQUE 제약만 변환한다.
+        // SQL/입력값 전체를 노출하지 않고, 알려진 UNIQUE 제약만 변환한다.
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof org.hibernate.exception.ConstraintViolationException violation) {
                 String constraint = violation.getConstraintName();
@@ -92,6 +99,10 @@ public class GlobalExceptionHandler {
                 }
                 constraint = constraint.toLowerCase(Locale.ROOT);
                 // H2는 PUBLIC.UK_MEMBER_EMAIL_INDEX_... 형태로 반환할 수 있다.
+                if (constraint.matches("(?:.*\\.)?uk_favorite_member_movie(?:_index_[a-z0-9]+)?(?: on .*?)?")) {
+                    return ResponseEntity.status(409).body(ApiResponse.failure(
+                            "FAVORITE409_1", "이미 이 영화를 즐겨찾기하셨습니다."));
+                }
                 if (constraint.matches("(?:.*\\.)?uk_member_email(?:_index_[a-z0-9]+)?")) {
                     return duplicateResponse(DuplicateMemberException.Field.EMAIL);
                 }

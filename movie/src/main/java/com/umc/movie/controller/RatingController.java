@@ -2,6 +2,8 @@
 package com.umc.movie.controller;
 
 import com.umc.movie.dto.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.umc.movie.dto.CreateRatingRequest;
 import com.umc.movie.dto.RatingPageResponse;
 import com.umc.movie.dto.RatingResponse;
@@ -38,9 +40,10 @@ public class RatingController {
     }
 
     // 7주차: JWT 기반 평점 등록
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/ratings")
     public ResponseEntity<ApiResponse<RatingResponse>> create(
-            @LoginMember Long memberId,
+            @Parameter(hidden = true) @LoginMember Long memberId,
             @Valid @RequestBody CreateRatingRequest request
     ) {
         RatingResponse response = ratingService.create(memberId, request);
@@ -50,9 +53,10 @@ public class RatingController {
     }
 
     // 7주차: JWT 기반 평점 수정
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<RatingResponse>> update(
-            @LoginMember Long memberId,
+            @Parameter(hidden = true) @LoginMember Long memberId,
             @PathVariable Long ratingId,
             @Valid @RequestBody UpdateRatingRequest request
     ) {
@@ -65,9 +69,10 @@ public class RatingController {
     }
 
     // 7주차: JWT 기반 평점 삭제
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> delete(
-            @LoginMember Long memberId,
+            @Parameter(hidden = true) @LoginMember Long memberId,
             @PathVariable Long ratingId
     ) {
         ratingService.delete(memberId, ratingId);

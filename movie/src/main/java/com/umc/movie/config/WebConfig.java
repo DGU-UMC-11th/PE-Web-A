@@ -34,6 +34,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "DELETE")
                 .maxAge(3600);
+        registry.addMapping("/movie-records")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("POST")
+                .maxAge(3600);
+
         registry.addMapping("/ratings/**")
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("POST", "PATCH", "DELETE")
@@ -61,7 +66,12 @@ public class WebConfig implements WebMvcConfigurer {
                         "/members/nickname/**",
                         "/members/email/**",
                         "/members/*/ratings",
-                        "/error"
+                        "/error",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml"
                 );
     }
 
